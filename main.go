@@ -64,7 +64,7 @@ func main() {
 	ip := chooseStreamIP()
 	fmt.Println("----------")
 
-	log.Printf("starting the stream on port %d (configure your firewall to allow it)", STREAMPORT)
+	log.Printf("starting the stream on port %d (configure your firewall if necessary)", STREAMPORT)
 	mux := http.NewServeMux()
 	mux.Handle("/stream", src)
 	srv := &http.Server{
