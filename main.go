@@ -37,9 +37,6 @@ import (
 // open in firewall
 const STREAMPORT = 9000
 
-// stream buffer in KB
-const STREAMBUFFER = 80
-
 // lame encoder bitrate
 const MP3BITRATE = 320
 

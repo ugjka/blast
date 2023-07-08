@@ -25,7 +25,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"net/http"
@@ -54,8 +53,7 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	parecCmd.Start()
 	lameCmd.Start()
 
-	buffw := bufio.NewWriterSize(w, STREAMBUFFER<<10)
-	io.Copy(buffw, lameReader)
+	io.Copy(w, lameReader)
 
 	if parecCmd.Process != nil {
 		parecCmd.Process.Kill()
