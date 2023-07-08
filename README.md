@@ -39,7 +39,7 @@ Select the lan IP address for the stream:
 
 ## Building
 
-You need `go` and `go-tools` toolchain
+You need the `go` and `go-tools` toolchain
 
 then execute:
 
