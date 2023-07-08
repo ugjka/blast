@@ -14,6 +14,7 @@ If you have all that then you can launch `blast` and it looks like this when you
 DLNA receivers
 0: Kitchen
 1: Phone
+2: Bedroom
 ----------
 Select the DLNA device:
 1
