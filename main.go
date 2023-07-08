@@ -52,8 +52,7 @@ func main() {
 	}
 	for _, exe := range exes {
 		if _, err := exec.LookPath(exe); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			oserr(err)
 		}
 	}
 	fmt.Println("----------")
