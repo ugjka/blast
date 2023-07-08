@@ -58,6 +58,10 @@ now you can run blast with:
 [user@user blast]$ ./blast
 ```
 
+## Why not use pulseaudio-dlna?
+
+This is for pipewire users.
+
 ## License
 
 ```
