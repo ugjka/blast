@@ -81,7 +81,7 @@ func main() {
 	} else {
 		streamURL = fmt.Sprintf("http://[%s]:%d/stream", ip, STREAMPORT)
 	}
-	log.Println("seting av1transport uri and playing")
+	log.Println("seting av1transport URI and playing")
 	av1SetAndPlay(dev.Location, streamURL)
 
 	// trap ctrl+c and kill
