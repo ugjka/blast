@@ -37,6 +37,7 @@ func chooseUPNPDevice() *goupnp.MaybeRootDevice {
 	if len(roots) == 0 {
 		oserr(fmt.Errorf("no dlna devices on the network online"))
 	}
+	fmt.Println("DLNA receivers")
 	for i, v := range roots {
 		fmt.Printf("%d: %s\n", i, v.Root.Device.FriendlyName)
 	}

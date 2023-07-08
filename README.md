@@ -11,12 +11,14 @@ If you have all that then you can launch `blast` and it looks like this when you
 ```
 [user@user blast]$ ./blast 
 ----------
+DLNA receivers
 0: Kitchen
 1: Phone
 ----------
 Select the DLNA device:
 1
 ----------
+Audio sources
 0: alsa_output.pci-0000_00_1b.0.analog-stereo.monitor
 1: alsa_input.pci-0000_00_1b.0.analog-stereo
 2: bluez_output.D8_AA_59_95_96_B7.1.monitor
@@ -24,17 +26,18 @@ Select the DLNA device:
 Select the audio source:
 2
 ----------
+Your LAN ip addresses
 0: 192.168.1.14
 1: 192.168.122.1
 2: 2a04:ec00:b9ab:555:3c50:e6e8:8ea:211f
 3: 2a04:ec00:b9ab:555:806d:800b:1138:8b1b
-4: fe80::f4c1:c827:a865:35e5
+4: fe80::f4c2:c827:a865:35e5
 ----------
 Select the lan IP address for the stream:
 0
 ----------
-2023/07/08 23:09:49 starting the stream on port 9000 (configure your firewall to allow it)
-2023/07/08 23:09:49 seting av1transport uri and playing
+2023/07/08 23:53:07 starting the stream on port 9000 (configure your firewall if necessary)
+2023/07/08 23:53:07 seting av1transport uri and playing
 ```
 
 ## Building

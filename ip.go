@@ -41,6 +41,7 @@ func chooseStreamIP() net.IP {
 	if len(ips) == 0 {
 		oserr(fmt.Errorf("no usable lan ip addresses found"))
 	}
+	fmt.Println("Your LAN ip addresses")
 	for i, ip := range ips {
 		fmt.Printf("%d: %s\n", i, ip)
 	}

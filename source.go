@@ -45,6 +45,7 @@ func chooseAudioSource() source {
 		oserr(fmt.Errorf("no audio sources found"))
 	}
 
+	fmt.Println("Audio sources")
 	for i, v := range srcJson {
 		fmt.Printf("%d: %s\n", i, v.Name)
 	}
