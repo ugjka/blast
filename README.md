@@ -15,6 +15,7 @@ DLNA receivers
 0: Kitchen
 1: Phone
 2: Bedroom
+3: Livingroom TV
 ----------
 Select the DLNA device:
 [1]
