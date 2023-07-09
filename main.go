@@ -60,6 +60,7 @@ func main() {
 	fmt.Println("----------")
 
 	log.Printf("starting the stream on port %d (configure your firewall if necessary)", STREAMPORT)
+
 	mux := http.NewServeMux()
 	mux.Handle("/stream", src)
 	srv := &http.Server{
@@ -76,6 +77,7 @@ func main() {
 	} else {
 		streamURL = fmt.Sprintf("http://[%s]:%d/stream", ip, STREAMPORT)
 	}
+
 	log.Println("seting av1transport URI and playing")
 	av1SetAndPlay(dev.Location, streamURL)
 
