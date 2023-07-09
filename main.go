@@ -67,7 +67,6 @@ func main() {
 		sinkID, err = blastSink.Output()
 		stderr(err)
 		sinkID = bytes.TrimSpace(sinkID)
-
 	}
 
 	// trap ctrl+c and kill
