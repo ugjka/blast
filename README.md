@@ -2,7 +2,7 @@
 
 ![Blast Logo](logo.png)
 
-## Stream your Linux audio to a DLNA renderer/receiver
+## Stream your Linux audio to a DLNA receiver
 
 You need `pactl`, `parec` and `lame` executables/dependencies on your system to run Blast.
 
