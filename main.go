@@ -41,6 +41,8 @@ const STREAMPORT = 9000
 // lame encoder bitrate
 const MP3BITRATE = 320
 
+const BLASTMONITOR = "blast.monitor"
+
 func main() {
 	// check for dependencies
 	exes := []string{
@@ -56,25 +58,33 @@ func main() {
 	dev := chooseUPNPDevice()
 	fmt.Println("----------")
 
-	blastSink := exec.Command("pactl", "load-module", "module-null-sink", "sink_name=blast")
-	sinkID, err := blastSink.Output()
-	stderr(err)
-	sinkID = bytes.TrimSpace(sinkID)
+	src := chooseAudioSource()
+	// on-demand handling of blast sink
+	var sinkID []byte
+	if string(src) == BLASTMONITOR {
+		blastSink := exec.Command("pactl", "load-module", "module-null-sink", "sink_name=blast")
+		var err error
+		sinkID, err = blastSink.Output()
+		stderr(err)
+		sinkID = bytes.TrimSpace(sinkID)
+
+	}
 
 	// trap ctrl+c and kill
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-sig
-		log.Println("deleting blast sink")
-		exec.Command("pactl", "unload-module", string(sinkID)).Run()
+		if sinkID != nil {
+			log.Println("deleting blast sink")
+			exec.Command("pactl", "unload-module", string(sinkID)).Run()
+		}
 		log.Println("stopping av1transport and exiting")
 		av1Stop(dev.Location)
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
 
-	src := chooseAudioSource()
 	fmt.Println("----------")
 	ip := chooseStreamIP()
 	fmt.Println("----------")

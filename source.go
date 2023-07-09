@@ -46,6 +46,8 @@ func chooseAudioSource() source {
 	}
 
 	fmt.Println("Audio sources")
+	// append for on-demand loading of blast sink
+	srcJson = append(srcJson, struct{ Name string }{BLASTMONITOR})
 	for i, v := range srcJson {
 		fmt.Printf("%d: %s\n", i, v.Name)
 	}
