@@ -1,6 +1,6 @@
 # BLAST
 
-![Blast Logo](blast.png)
+![Blast Logo](logo.png)
 
 ## Stream your Linux audio to a DLNA renderer/receiver
 
@@ -58,6 +58,10 @@ now you can run blast with:
 ```
 [user@user blast]$ ./blast
 ```
+
+## Bins
+
+Prebuilt Linux binaries are available on the releases [page](https://github.com/ugjka/blast/releases)
 
 ## Why not use pulseaudio-dlna?
 
