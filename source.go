@@ -51,8 +51,8 @@ func chooseAudioSource() source {
 	}
 	fmt.Println("----------")
 	fmt.Println("Select the audio source:")
-
-	return source(srcJson[selector(len(srcJson))].Name)
+	selected := selector(srcJson)
+	return source(srcJson[selected].Name)
 }
 
 type Sources []struct {

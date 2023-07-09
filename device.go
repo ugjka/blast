@@ -43,5 +43,6 @@ func chooseUPNPDevice() *goupnp.MaybeRootDevice {
 	}
 	fmt.Println("----------")
 	fmt.Println("Select the DLNA device:")
-	return &roots[selector(len(roots))]
+	selected := selector(roots)
+	return &roots[selected]
 }

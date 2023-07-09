@@ -48,5 +48,6 @@ func chooseStreamIP() net.IP {
 
 	fmt.Println("----------")
 	fmt.Println("Select the lan IP address for the stream:")
-	return ips[selector(len(ips))]
+	selected := selector(ips)
+	return ips[selected]
 }

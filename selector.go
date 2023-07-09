@@ -30,7 +30,7 @@ import (
 	"strconv"
 )
 
-func selector(total int) int {
+func selector[slice any](s []slice) int {
 	var choice int
 	for {
 		var choiceStr string
@@ -40,11 +40,13 @@ func selector(total int) int {
 			continue
 		}
 		choice, err = strconv.Atoi(choiceStr)
-		if err != nil || choice >= total {
+		if err != nil || choice >= len(s) {
 			fmt.Print("\033[1A\033[K")
 		} else {
 			break
 		}
 	}
+	fmt.Print("\033[1A\033[K")
+	fmt.Printf("[%d]\n", choice)
 	return choice
 }
