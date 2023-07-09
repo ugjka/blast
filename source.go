@@ -49,8 +49,10 @@ func chooseAudioSource() source {
 	for i, v := range srcJson {
 		fmt.Printf("%d: %s\n", i, v.Name)
 	}
+
 	fmt.Println("----------")
 	fmt.Println("Select the audio source:")
+
 	selected := selector(srcJson)
 	return source(srcJson[selected].Name)
 }
