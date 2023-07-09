@@ -28,13 +28,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
-	"strings"
 )
 
 func chooseAudioSource() source {
-	const SRCCMD = "pactl -f json list sources short"
-	srccmdArr := strings.Split(SRCCMD, " ")
-	srcCmd := exec.Command(srccmdArr[0], srccmdArr[1:]...)
+	srcCmd := exec.Command("pactl", "-f", "json", "list", "sources", "short")
 	srcData, err := srcCmd.Output()
 	stderr(err)
 
