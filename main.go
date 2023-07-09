@@ -25,6 +25,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -54,6 +55,25 @@ func main() {
 	}
 	dev := chooseUPNPDevice()
 	fmt.Println("----------")
+
+	blastSink := exec.Command("pactl", "load-module", "module-null-sink", "sink_name=blast")
+	sinkID, err := blastSink.Output()
+	stderr(err)
+	sinkID = bytes.TrimSpace(sinkID)
+
+	// trap ctrl+c and kill
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sig
+		log.Println("deleting blast sink")
+		exec.Command("pactl", "unload-module", string(sinkID)).Run()
+		log.Println("stopping av1transport and exiting")
+		av1Stop(dev.Location)
+		fmt.Println("terminated...")
+		os.Exit(0)
+	}()
+
 	src := chooseAudioSource()
 	fmt.Println("----------")
 	ip := chooseStreamIP()
@@ -80,13 +100,5 @@ func main() {
 
 	log.Println("seting av1transport URI and playing")
 	av1SetAndPlay(dev.Location, streamURL)
-
-	// trap ctrl+c and kill
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-
-	<-sig
-	log.Println("stopping av1transport and exiting")
-	av1Stop(dev.Location)
-	fmt.Println("terminated...")
+	select {}
 }
