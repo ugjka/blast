@@ -40,7 +40,7 @@ Select the lan IP address for the stream:
 [0]
 ----------
 2023/07/08 23:53:07 starting the stream on port 9000 (configure your firewall if necessary)
-2023/07/08 23:53:07 seting av1transport URI and playing
+2023/07/08 23:53:07 setting av1transport URI and playing
 ```
 
 ## Building
