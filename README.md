@@ -68,6 +68,11 @@ Prebuilt Linux binaries are available on the releases [page](https://github.com/
 
 This is for pipewire-pulse users.
 
+## Caveats
+
+* You need to allow port 9000 from LAN for the DLNA receiver to be able to access the HTTP stream
+* blast monitor sink may not be visible in the pulse control applet unless you enable virtual streams
+
 ## License
 
 ```
