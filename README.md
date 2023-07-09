@@ -61,7 +61,7 @@ now you can run blast with:
 
 ## Why not use pulseaudio-dlna?
 
-This is for pipewire users.
+This is for pipewire-pulse users.
 
 ## License
 
