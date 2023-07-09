@@ -52,7 +52,6 @@ func main() {
 			stderr(err)
 		}
 	}
-	fmt.Println("----------")
 	dev := chooseUPNPDevice()
 	fmt.Println("----------")
 	src := chooseAudioSource()

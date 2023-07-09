@@ -17,7 +17,7 @@ DLNA receivers
 2: Bedroom
 ----------
 Select the DLNA device:
-1
+[1]
 ----------
 Audio sources
 0: alsa_output.pci-0000_00_1b.0.analog-stereo.monitor
@@ -25,7 +25,7 @@ Audio sources
 2: bluez_output.D8_AA_59_95_96_B7.1.monitor
 ----------
 Select the audio source:
-2
+[2]
 ----------
 Your LAN ip addresses
 0: 192.168.1.14
@@ -35,7 +35,7 @@ Your LAN ip addresses
 4: fe80::f4c2:c827:a865:35e5
 ----------
 Select the lan IP address for the stream:
-0
+[0]
 ----------
 2023/07/08 23:53:07 starting the stream on port 9000 (configure your firewall if necessary)
 2023/07/08 23:53:07 seting av1transport URI and playing

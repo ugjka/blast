@@ -32,7 +32,10 @@ import (
 )
 
 func chooseUPNPDevice() *goupnp.MaybeRootDevice {
+	fmt.Println("Loading...")
 	roots, err := goupnp.DiscoverDevices(av1.URN_AVTransport_1)
+	fmt.Print("\033[1A\033[K")
+	fmt.Println("----------")
 	stderr(err)
 	if len(roots) == 0 {
 		stderr(fmt.Errorf("no dlna devices on the network found"))
