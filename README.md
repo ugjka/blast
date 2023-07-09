@@ -24,6 +24,7 @@ Audio sources
 0: alsa_output.pci-0000_00_1b.0.analog-stereo.monitor
 1: alsa_input.pci-0000_00_1b.0.analog-stereo
 2: bluez_output.D8_AA_59_95_96_B7.1.monitor
+3: blast.monitor
 ----------
 Select the audio source:
 [2]
