@@ -73,14 +73,18 @@ func main() {
 	// trap ctrl+c and kill
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	var playing bool
 	go func() {
 		<-sig
+		fmt.Println()
 		if sinkID != nil {
 			log.Println("deleting blast sink")
 			exec.Command("pactl", "unload-module", string(sinkID)).Run()
 		}
-		log.Println("stopping av1transport and exiting")
-		av1Stop(dev.Location)
+		if playing {
+			log.Println("stopping av1transport and exiting")
+			av1Stop(dev.Location)
+		}
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
@@ -110,5 +114,6 @@ func main() {
 
 	log.Println("seting av1transport URI and playing")
 	av1SetAndPlay(dev.Location, streamURL)
+	playing = true
 	select {}
 }
