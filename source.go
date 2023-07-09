@@ -36,13 +36,13 @@ func chooseAudioSource() source {
 	srccmdArr := strings.Split(SRCCMD, " ")
 	srcCmd := exec.Command(srccmdArr[0], srccmdArr[1:]...)
 	srcData, err := srcCmd.Output()
-	oserr(err)
+	stderr(err)
 
 	var srcJson Sources
 	err = json.Unmarshal(srcData, &srcJson)
-	oserr(err)
+	stderr(err)
 	if len(srcJson) == 0 {
-		oserr(fmt.Errorf("no audio sources found"))
+		stderr(fmt.Errorf("no audio sources found"))
 	}
 
 	fmt.Println("Audio sources")

@@ -32,11 +32,11 @@ import (
 
 func av1SetAndPlay(loc *url.URL, stream string) {
 	client, err := av1.NewAVTransport1ClientsByURL(loc)
-	oserr(err)
+	stderr(err)
 	err = client[0].SetAVTransportURI(0, stream, "")
-	oserr(err)
+	stderr(err)
 	err = client[0].Play(0, "1")
-	oserr(err)
+	stderr(err)
 }
 
 func av1Stop(loc *url.URL) {

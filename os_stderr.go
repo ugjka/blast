@@ -29,7 +29,7 @@ import (
 	"os"
 )
 
-func oserr(err error) {
+func stderr(err error) {
 	if err == nil {
 		return
 	}

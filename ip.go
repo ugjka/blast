@@ -31,7 +31,7 @@ import (
 
 func chooseStreamIP() net.IP {
 	addrs, err := net.InterfaceAddrs()
-	oserr(err)
+	stderr(err)
 	ips := make([]net.IP, 0)
 	for _, addr := range addrs {
 		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && (ipnet.IP.To4() != nil || ipnet.IP.To16() != nil) {
@@ -39,7 +39,7 @@ func chooseStreamIP() net.IP {
 		}
 	}
 	if len(ips) == 0 {
-		oserr(fmt.Errorf("no usable lan ip addresses found"))
+		stderr(fmt.Errorf("no usable lan ip addresses found"))
 	}
 	fmt.Println("Your LAN ip addresses")
 	for i, ip := range ips {

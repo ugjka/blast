@@ -49,7 +49,7 @@ func main() {
 	}
 	for _, exe := range exes {
 		if _, err := exec.LookPath(exe); err != nil {
-			oserr(err)
+			stderr(err)
 		}
 	}
 	fmt.Println("----------")

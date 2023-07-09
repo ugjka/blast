@@ -33,9 +33,9 @@ import (
 
 func chooseUPNPDevice() *goupnp.MaybeRootDevice {
 	roots, err := goupnp.DiscoverDevices(av1.URN_AVTransport_1)
-	oserr(err)
+	stderr(err)
 	if len(roots) == 0 {
-		oserr(fmt.Errorf("no dlna devices on the network online"))
+		stderr(fmt.Errorf("no dlna devices on the network online"))
 	}
 	fmt.Println("DLNA receivers")
 	for i, v := range roots {
