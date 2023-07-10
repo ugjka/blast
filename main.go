@@ -114,7 +114,7 @@ func main() {
 	} else {
 		streamURL = fmt.Sprintf("http://[%s]:%d/stream", streamAddress, STREAMPORT)
 	}
-
+	log.Printf("stream URI: %s\n", streamURL)
 	log.Println("setting av1transport URI and playing")
 	av1SetAndPlay(dlnaDevice.Location, streamURL)
 	isPlaying = true
