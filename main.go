@@ -33,6 +33,8 @@ import (
 	"os/exec"
 	"os/signal"
 	"syscall"
+
+	"github.com/huin/goupnp"
 )
 
 // open in firewall
@@ -55,64 +57,66 @@ func main() {
 			stderr(err)
 		}
 	}
-	dev := chooseUPNPDevice()
-	fmt.Println("----------")
 
-	src := chooseAudioSource()
-	// on-demand handling of blast sink
-	var sinkID []byte
-	if string(src) == BLASTMONITOR {
-		blastSink := exec.Command("pactl", "load-module", "module-null-sink", "sink_name=blast")
-		var err error
-		sinkID, err = blastSink.Output()
-		stderr(err)
-		sinkID = bytes.TrimSpace(sinkID)
-	}
-
+	var blastSinkID []byte
+	var isPlaying bool
+	var dlnaDevice *goupnp.MaybeRootDevice
 	// trap ctrl+c and kill
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-	var playing bool
 	go func() {
 		<-sig
 		fmt.Println()
-		if sinkID != nil {
-			log.Println("deleting blast sink")
-			exec.Command("pactl", "unload-module", string(sinkID)).Run()
+		if blastSinkID != nil {
+			log.Println("unloading the blast sink")
+			exec.Command("pactl", "unload-module", string(blastSinkID)).Run()
 		}
-		if playing {
+		if isPlaying {
 			log.Println("stopping av1transport and exiting")
-			av1Stop(dev.Location)
+			av1Stop(dlnaDevice.Location)
 		}
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
 
+	dlnaDevice = chooseUPNPDevice()
 	fmt.Println("----------")
-	ip := chooseStreamIP()
+
+	audioSource := chooseAudioSource()
+	// on-demand handling of blast sink
+	if string(audioSource) == BLASTMONITOR {
+		blastSink := exec.Command("pactl", "load-module", "module-null-sink", "sink_name=blast")
+		var err error
+		blastSinkID, err = blastSink.Output()
+		stderr(err)
+		blastSinkID = bytes.TrimSpace(blastSinkID)
+	}
+
+	fmt.Println("----------")
+	streamAddress := chooseStreamIP()
 	fmt.Println("----------")
 
 	log.Printf("starting the stream on port %d (configure your firewall if necessary)", STREAMPORT)
 
 	mux := http.NewServeMux()
-	mux.Handle("/stream", src)
-	srv := &http.Server{
+	mux.Handle("/stream", audioSource)
+	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", STREAMPORT),
 		ReadTimeout:  -1,
 		WriteTimeout: -1,
 		Handler:      mux,
 	}
-	go srv.ListenAndServe()
+	go httpServer.ListenAndServe()
 
 	var streamURL string
-	if ip.To4() != nil {
-		streamURL = fmt.Sprintf("http://%s:%d/stream", ip, STREAMPORT)
+	if streamAddress.To4() != nil {
+		streamURL = fmt.Sprintf("http://%s:%d/stream", streamAddress, STREAMPORT)
 	} else {
-		streamURL = fmt.Sprintf("http://[%s]:%d/stream", ip, STREAMPORT)
+		streamURL = fmt.Sprintf("http://[%s]:%d/stream", streamAddress, STREAMPORT)
 	}
 
 	log.Println("setting av1transport URI and playing")
-	av1SetAndPlay(dev.Location, streamURL)
-	playing = true
+	av1SetAndPlay(dlnaDevice.Location, streamURL)
+	isPlaying = true
 	select {}
 }
