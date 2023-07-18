@@ -31,29 +31,29 @@ import (
 )
 
 func chooseAudioSource() source {
-	srcCmd := exec.Command("pactl", "-f", "json", "list", "sources", "short")
-	srcData, err := srcCmd.Output()
+	srcCMD := exec.Command("pactl", "-f", "json", "list", "sources", "short")
+	srcData, err := srcCMD.Output()
 	stderr(err)
 
-	var srcJson Sources
-	err = json.Unmarshal(srcData, &srcJson)
+	var srcJSON Sources
+	err = json.Unmarshal(srcData, &srcJSON)
 	stderr(err)
-	if len(srcJson) == 0 {
+	if len(srcJSON) == 0 {
 		stderr(fmt.Errorf("no audio sources found"))
 	}
 
 	fmt.Println("Audio sources")
 	// append for on-demand loading of blast sink
-	srcJson = append(srcJson, struct{ Name string }{BLASTMONITOR})
-	for i, v := range srcJson {
+	srcJSON = append(srcJSON, struct{ Name string }{BLASTMONITOR})
+	for i, v := range srcJSON {
 		fmt.Printf("%d: %s\n", i, v.Name)
 	}
 
 	fmt.Println("----------")
 	fmt.Println("Select the audio source:")
 
-	selected := selector(srcJson)
-	return source(srcJson[selected].Name)
+	selected := selector(srcJSON)
+	return source(srcJSON[selected].Name)
 }
 
 type Sources []struct {

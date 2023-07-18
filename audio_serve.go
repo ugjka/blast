@@ -40,25 +40,25 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Pragma", "no-cache")
 	w.Header().Set("Server", "blast")
 
-	parecCmd := exec.Command("parec", "-d", string(s))
-	lameCmd := exec.Command("lame", "-r", "-b", fmt.Sprint(MP3BITRATE), "-", "-")
+	parecCMD := exec.Command("parec", "-d", string(s))
+	lameCMD := exec.Command("lame", "-r", "-b", fmt.Sprint(MP3BITRATE), "-", "-")
 
 	parecReader, parecWriter := io.Pipe()
-	parecCmd.Stdout = parecWriter
-	lameCmd.Stdin = parecReader
+	parecCMD.Stdout = parecWriter
+	lameCMD.Stdin = parecReader
 
 	lameReader, lameWriter := io.Pipe()
-	lameCmd.Stdout = lameWriter
+	lameCMD.Stdout = lameWriter
 
-	parecCmd.Start()
-	lameCmd.Start()
+	parecCMD.Start()
+	lameCMD.Start()
 
 	io.Copy(w, lameReader)
 
-	if parecCmd.Process != nil {
-		parecCmd.Process.Kill()
+	if parecCMD.Process != nil {
+		parecCMD.Process.Kill()
 	}
-	if lameCmd.Process != nil {
-		lameCmd.Process.Kill()
+	if lameCMD.Process != nil {
+		lameCMD.Process.Kill()
 	}
 }

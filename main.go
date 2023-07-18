@@ -60,7 +60,7 @@ func main() {
 
 	var blastSinkID []byte
 	var isPlaying bool
-	var dlnaDevice *goupnp.MaybeRootDevice
+	var DLNADevice *goupnp.MaybeRootDevice
 	// trap ctrl+c and kill
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
@@ -73,13 +73,13 @@ func main() {
 		}
 		if isPlaying {
 			log.Println("stopping av1transport and exiting")
-			av1Stop(dlnaDevice.Location)
+			AV1Stop(DLNADevice.Location)
 		}
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
 
-	dlnaDevice = chooseUPNPDevice()
+	DLNADevice = chooseUPNPDevice()
 	fmt.Println("----------")
 
 	audioSource := chooseAudioSource()
@@ -116,7 +116,7 @@ func main() {
 	}
 	log.Printf("stream URI: %s\n", streamURL)
 	log.Println("setting av1transport URI and playing")
-	av1SetAndPlay(dlnaDevice.Location, streamURL)
+	AV1SetAndPlay(DLNADevice.Location, streamURL)
 	isPlaying = true
 	select {}
 }

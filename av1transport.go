@@ -30,7 +30,7 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-func av1SetAndPlay(loc *url.URL, stream string) {
+func AV1SetAndPlay(loc *url.URL, stream string) {
 	client, err := av1.NewAVTransport1ClientsByURL(loc)
 	stderr(err)
 	err = client[0].SetAVTransportURI(0, stream, "")
@@ -39,7 +39,7 @@ func av1SetAndPlay(loc *url.URL, stream string) {
 	stderr(err)
 }
 
-func av1Stop(loc *url.URL) {
+func AV1Stop(loc *url.URL) {
 	client, err := av1.NewAVTransport1ClientsByURL(loc)
 	if err != nil {
 		return
