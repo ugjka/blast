@@ -106,7 +106,10 @@ func main() {
 		WriteTimeout: -1,
 		Handler:      mux,
 	}
-	go httpServer.ListenAndServe()
+	go func() {
+		err := httpServer.ListenAndServe()
+		stderr(err)
+	}()
 
 	var streamURL string
 	if streamAddress.To4() != nil {
