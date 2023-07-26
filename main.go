@@ -113,7 +113,7 @@ func main() {
 	}()
 	// detect when the stream server is up
 	for {
-		_, err := net.Dial("tcp", fmt.Sprintf("0.0.0.0:%d", STREAMPORT))
+		_, err := net.Dial("tcp", fmt.Sprintf(":%d", STREAMPORT))
 		if err == nil {
 			break
 		}
