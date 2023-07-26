@@ -28,12 +28,12 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/huin/goupnp"
 )
@@ -111,7 +111,13 @@ func main() {
 		err := httpServer.ListenAndServe()
 		stderr(err)
 	}()
-	time.Sleep(time.Second)
+	// detect when the stream server is up
+	for {
+		_, err := net.Dial("tcp", fmt.Sprintf("0.0.0.0:%d", STREAMPORT))
+		if err == nil {
+			break
+		}
+	}
 
 	var streamURL string
 	if streamAddress.To4() != nil {
