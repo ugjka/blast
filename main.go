@@ -33,6 +33,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/huin/goupnp"
 )
@@ -110,6 +111,7 @@ func main() {
 		err := httpServer.ListenAndServe()
 		stderr(err)
 	}()
+	time.Sleep(time.Second)
 
 	var streamURL string
 	if streamAddress.To4() != nil {
