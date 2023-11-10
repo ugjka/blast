@@ -35,10 +35,13 @@ type source string
 
 func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Set some headers
-	w.Header().Set("Content-Type", "audio/mpeg")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Pragma", "no-cache")
-	w.Header().Set("Server", "blast")
+	w.Header().Add("Content-Type", "audio/mp3")
+	w.Header().Add("Content-Type", "audio/mpeg")
+	w.Header().Add("Cache-Control", "no-cache")
+	w.Header().Add("Cache-Control", "no-store")
+	w.Header().Add("Pragma", "no-cache")
+	w.Header().Add("Accept-Ranges", "none")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
 
 	parecCMD := exec.Command("parec", "-d", string(s))
 	lameCMD := exec.Command("lame", "-r", "-b", fmt.Sprint(MP3BITRATE), "-", "-")
