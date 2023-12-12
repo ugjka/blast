@@ -37,9 +37,9 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Set some headers
 	w.Header().Add("Content-Type", "audio/mp3")
 	w.Header().Add("Content-Type", "audio/mpeg")
-	w.Header().Add("Cache-Control", "no-cache")
-	w.Header().Add("Cache-Control", "no-store")
+	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Add("Pragma", "no-cache")
+	w.Header().Add("Expires", "0")
 	w.Header().Add("Accept-Ranges", "none")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 
