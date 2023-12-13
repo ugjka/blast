@@ -44,24 +44,30 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 
 	parecCMD := exec.Command("parec", "-d", string(s))
-	lameCMD := exec.Command("lame", "-r", "-b", fmt.Sprint(MP3BITRATE), "-", "-")
-
+	ffmpegCMD := exec.Command(
+		"ffmpeg",
+		"-f", "s16le",
+		"-ac", "2",
+		"-i", "-",
+		"-b:a", fmt.Sprintf("%dk", MP3BITRATE),
+		"-f", "mp3", "-",
+	)
 	parecReader, parecWriter := io.Pipe()
 	parecCMD.Stdout = parecWriter
-	lameCMD.Stdin = parecReader
+	ffmpegCMD.Stdin = parecReader
 
-	lameReader, lameWriter := io.Pipe()
-	lameCMD.Stdout = lameWriter
+	ffmpegReader, ffmpegWriter := io.Pipe()
+	ffmpegCMD.Stdout = ffmpegWriter
 
 	parecCMD.Start()
-	lameCMD.Start()
+	ffmpegCMD.Start()
 
-	io.Copy(w, lameReader)
+	io.Copy(w, ffmpegReader)
 
 	if parecCMD.Process != nil {
 		parecCMD.Process.Kill()
 	}
-	if lameCMD.Process != nil {
-		lameCMD.Process.Kill()
+	if ffmpegCMD.Process != nil {
+		ffmpegCMD.Process.Kill()
 	}
 }

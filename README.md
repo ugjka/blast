@@ -4,7 +4,7 @@
 
 ## Stream your Linux audio to DLNA receivers
 
-You need `pactl`, `parec` and `lame` executables/dependencies on your system to run Blast.
+You need `pactl`, `parec` and `ffmpeg` executables/dependencies on your system to run Blast.
 
 If you have all that then you can launch `blast` and it looks like this when you run it:
 
