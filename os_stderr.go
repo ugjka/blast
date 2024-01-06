@@ -26,11 +26,20 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
 func stderr(err error) {
 	if err == nil {
+		return
+	}
+	fmt.Fprintln(os.Stderr, err)
+	os.Exit(1)
+}
+
+func stderreof(err error) {
+	if err == nil || err == io.EOF {
 		return
 	}
 	fmt.Fprintln(os.Stderr, err)
