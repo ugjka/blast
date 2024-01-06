@@ -26,8 +26,8 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
+	"strings"
 )
 
 func stderr(err error) {
@@ -39,7 +39,7 @@ func stderr(err error) {
 }
 
 func stderreof(err error) {
-	if err == nil || err == io.EOF {
+	if err == nil || strings.HasSuffix(err.Error(), "EOF") {
 		return
 	}
 	fmt.Fprintln(os.Stderr, err)
