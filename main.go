@@ -26,6 +26,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -35,6 +36,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/huin/goupnp"
 )
 
@@ -58,7 +60,8 @@ func main() {
 			stderr(err)
 		}
 	}
-
+	debug := flag.Bool("debug", false, "debug info")
+	flag.Parse()
 	var blastSinkID []byte
 	var isPlaying bool
 	var DLNADevice *goupnp.MaybeRootDevice
@@ -81,6 +84,10 @@ func main() {
 	}()
 
 	DLNADevice = chooseUPNPDevice()
+	if *debug {
+		spew.Fdump(os.Stderr, DLNADevice)
+		os.Exit(0)
+	}
 	fmt.Println("----------")
 
 	audioSource := chooseAudioSource()
