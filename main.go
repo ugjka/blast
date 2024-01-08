@@ -38,6 +38,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/huin/goupnp"
+	"github.com/huin/goupnp/dcps/av1"
 )
 
 // open in firewall
@@ -86,6 +87,8 @@ func main() {
 	DLNADevice = chooseUPNPDevice()
 	if *debug {
 		spew.Fdump(os.Stderr, DLNADevice)
+		client, err := av1.NewAVTransport1ClientsByURL(DLNADevice.Location)
+		spew.Fdump(os.Stderr, client, err)
 		os.Exit(0)
 	}
 	fmt.Println("----------")
