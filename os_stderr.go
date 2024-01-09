@@ -27,19 +27,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 func stderr(err error) {
 	if err == nil {
-		return
-	}
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
-}
-
-func stderreof(err error) {
-	if err == nil || strings.HasSuffix(err.Error(), "EOF") {
 		return
 	}
 	fmt.Fprintln(os.Stderr, err)
