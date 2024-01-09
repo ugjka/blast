@@ -28,6 +28,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -85,12 +86,27 @@ func main() {
 	}()
 
 	DLNADevice = chooseUPNPDevice()
+
 	if *debug {
 		spew.Fdump(os.Stderr, DLNADevice)
-		client, err := av1.NewAVTransport1ClientsByURL(DLNADevice.Location)
-		spew.Fdump(os.Stderr, client, err)
+		clients, err := av1.NewAVTransport1ClientsByURL(DLNADevice.Location)
+		spew.Fdump(os.Stderr, clients, err)
+		for _, client := range clients {
+			resp, err := http.Get(client.Location.String())
+			if err != nil {
+				spew.Fprintln(os.Stderr, err)
+				continue
+			}
+			data, err := io.ReadAll(resp.Body)
+			if err != nil {
+				spew.Fprintln(os.Stderr, err)
+				continue
+			}
+			spew.Fprintln(os.Stderr, string(data))
+		}
 		os.Exit(0)
 	}
+
 	fmt.Println("----------")
 
 	audioSource := chooseAudioSource()
