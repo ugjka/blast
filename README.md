@@ -44,6 +44,8 @@ Select the lan IP address for the stream:
 2023/07/08 23:53:07 setting av1transport URI and playing
 ```
 
+There's also a `-debug` flag if you want to inspect your DLNA device
+
 ## Building
 
 You need the `go` and `go-tools` toolchain, also `git`
