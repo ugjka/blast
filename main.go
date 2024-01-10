@@ -26,7 +26,9 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -35,7 +37,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/huin/goupnp"
+	"github.com/huin/goupnp/dcps/av1"
 )
 
 // open in firewall
@@ -58,7 +62,8 @@ func main() {
 			stderr(err)
 		}
 	}
-
+	debug := flag.Bool("debug", false, "debug info")
+	flag.Parse()
 	var blastSinkID []byte
 	var isPlaying bool
 	var DLNADevice *goupnp.MaybeRootDevice
@@ -81,6 +86,27 @@ func main() {
 	}()
 
 	DLNADevice = chooseUPNPDevice()
+
+	if *debug {
+		spew.Fdump(os.Stderr, DLNADevice)
+		clients, err := av1.NewAVTransport1ClientsByURL(DLNADevice.Location)
+		spew.Fdump(os.Stderr, clients, err)
+		for _, client := range clients {
+			resp, err := http.Get(client.Location.String())
+			if err != nil {
+				spew.Fprintln(os.Stderr, err)
+				continue
+			}
+			data, err := io.ReadAll(resp.Body)
+			if err != nil {
+				spew.Fprintln(os.Stderr, err)
+				continue
+			}
+			spew.Fprintln(os.Stderr, string(data))
+		}
+		os.Exit(0)
+	}
+
 	fmt.Println("----------")
 
 	audioSource := chooseAudioSource()
