@@ -146,10 +146,14 @@ func main() {
 	}
 
 	var streamURL string
+	var protocol = "http"
+	if detectSonos(DLNADevice) {
+		protocol = "x-rincon-mp3radio"
+	}
 	if streamAddress.To4() != nil {
-		streamURL = fmt.Sprintf("http://%s:%d/stream", streamAddress, STREAMPORT)
+		streamURL = fmt.Sprintf("%s://%s:%d/stream", protocol, streamAddress, STREAMPORT)
 	} else {
-		streamURL = fmt.Sprintf("http://[%s]:%d/stream", streamAddress, STREAMPORT)
+		streamURL = fmt.Sprintf("%s://[%s]:%d/stream", protocol, streamAddress, STREAMPORT)
 	}
 	log.Printf("stream URI: %s\n", streamURL)
 	log.Println("setting av1transport URI and playing")
