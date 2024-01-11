@@ -35,7 +35,6 @@ type source string
 
 func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Set some headers
-	w.Header().Add("Content-Type", "audio/mp3")
 	w.Header().Add("Content-Type", "audio/mpeg")
 	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Add("Pragma", "no-cache")
