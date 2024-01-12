@@ -43,7 +43,7 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("TransferMode.DLNA.ORG", "Streaming")
 	w.Header().Add("Content-Length", "1000000000000")
 
-	parecCMD := exec.Command("parec", "-d", string(s))
+	parecCMD := exec.Command("parec", "-d", string(s), "-n", "blast-rec")
 	ffmpegCMD := exec.Command(
 		"ffmpeg",
 		"-f", "s16le",
