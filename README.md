@@ -76,6 +76,10 @@ This is for pipewire-pulse users.
 * You need to allow port 9000 from LAN for the DLNA receiver to be able to access the HTTP stream
 * blast monitor sink may not be visible in the pulse control applet unless you enable virtual streams
 
+## Trivia
+
+What on earth is "x-rincon-mp3radio"
+
 ## License
 
 ```
