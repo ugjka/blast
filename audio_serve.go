@@ -27,7 +27,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"os/exec"
 )
@@ -42,7 +41,7 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Accept-Ranges", "none")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("TransferMode.DLNA.ORG", "Streaming")
-	w.Header().Add("Content-Length", fmt.Sprint(math.MaxInt64))
+	w.Header().Add("Content-Length", "1000000000000")
 
 	parecCMD := exec.Command("parec", "-d", string(s))
 	ffmpegCMD := exec.Command(
