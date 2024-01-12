@@ -29,19 +29,30 @@ import (
 	"io"
 	"net/http"
 	"os/exec"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 type source string
 
 func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Set some header
-	w.Header().Add("Cache-Control", "no-cache, no-store, must-revalidate")
+	// Set some headers
+	w.Header().Add("Cache-Control", "no-cache, no-store")
 	w.Header().Add("Pragma", "no-cache")
 	w.Header().Add("Expires", "0")
 	w.Header().Add("Accept-Ranges", "none")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("TransferMode.DLNA.ORG", "Streaming")
 	w.Header().Add("Content-Length", "1000000000000")
+	w.Header().Add("Content-Type", "audio/mpeg")
+	if *headers {
+		spew.Dump(r.Method)
+		spew.Dump(r.Header)
+	}
+	if r.Method == http.MethodHead {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	parecCMD := exec.Command("parec", "-d", string(s), "-n", "blast-rec")
 	ffmpegCMD := exec.Command(

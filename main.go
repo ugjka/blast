@@ -50,6 +50,8 @@ const MP3BITRATE = 320
 
 const BLASTMONITOR = "blast.monitor"
 
+var headers = new(bool)
+
 func main() {
 	// check for dependencies
 	exes := []string{
@@ -62,7 +64,8 @@ func main() {
 			stderr(err)
 		}
 	}
-	debug := flag.Bool("debug", false, "debug info")
+	debug := flag.Bool("debug", false, "print debug info")
+	headers = flag.Bool("headers", false, "print request headers")
 	flag.Parse()
 	var blastSinkID []byte
 	var isPlaying bool
