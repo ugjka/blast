@@ -70,6 +70,10 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 
 	parecCMD := exec.Command("parec", "-d", string(s), "-n", "blast-rec")
 	ffmpegCMD := exec.Command(
