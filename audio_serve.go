@@ -57,10 +57,13 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("ContentFeatures.DLNA.ORG", f.String())
 	}
+
+	const yearSeconds = 365 * 24 * 60 * 60
+	const yearBytes = yearSeconds * (MP3BITRATE / 8) * 1000
 	if r.Header.Get("Getmediainfo.sec") == "1" {
-		w.Header().Set("MediaInfo.sec", "SEC_Duration=31536000000") // year in ms
+		w.Header().Set("MediaInfo.sec", fmt.Sprintf("SEC_Duration=%d", yearSeconds*1000))
 	}
-	w.Header().Add("Content-Length", "1261440000000") // year at 320kbps (1.1TB)
+	w.Header().Add("Content-Length", fmt.Sprint(yearBytes))
 	w.Header().Add("Content-Type", "audio/mpeg")
 
 	if r.Method == http.MethodHead {
