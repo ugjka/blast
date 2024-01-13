@@ -36,6 +36,11 @@ import (
 type source string
 
 func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if *headers {
+		spew.Dump(r.Method)
+		spew.Dump(r.Header)
+	}
+
 	// Set some headers
 	w.Header().Add("Cache-Control", "no-cache, no-store")
 	w.Header().Add("Pragma", "no-cache")
@@ -45,10 +50,7 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("TransferMode.DLNA.ORG", "Streaming")
 	w.Header().Add("Content-Length", "1000000000000")
 	w.Header().Add("Content-Type", "audio/mpeg")
-	if *headers {
-		spew.Dump(r.Method)
-		spew.Dump(r.Header)
-	}
+
 	if r.Method == http.MethodHead {
 		w.WriteHeader(http.StatusOK)
 		return
