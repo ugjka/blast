@@ -47,8 +47,20 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Expires", "0")
 	w.Header().Add("Accept-Ranges", "none")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
-	w.Header().Add("TransferMode.DLNA.ORG", "Streaming")
-	w.Header().Add("Content-Length", "1000000000000")
+	// handle devices like Samsung TVs
+	if r.Header.Get("GetContentFeatures.DLNA.ORG") == "1" {
+		f := dlnaContentFeatures{
+			profileName:     "MP3",
+			supportTimeSeek: false,
+			supportRange:    false,
+			flags:           DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE | DLNA_ORG_FLAG_DLNA_V15,
+		}
+		w.Header().Set("ContentFeatures.DLNA.ORG", f.String())
+	}
+	if r.Header.Get("Getmediainfo.sec") == "1" {
+		w.Header().Set("MediaInfo.sec", "SEC_Duration=31536000000") // year in ms
+	}
+	w.Header().Add("Content-Length", "1261440000000") // year at 320kbps (1.1TB)
 	w.Header().Add("Content-Type", "audio/mpeg")
 
 	if r.Method == http.MethodHead {
