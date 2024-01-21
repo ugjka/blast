@@ -27,6 +27,7 @@ package main
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/huin/goupnp/dcps/av1"
@@ -36,10 +37,16 @@ func AV1SetAndPlay(loc *url.URL, stream string) {
 	client, err := av1.NewAVTransport1ClientsByURL(loc)
 	stderr(err)
 	err = client[0].SetAVTransportURI(0, stream, "")
-	stderr(fmt.Errorf("set uri: %v", err))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "set uri:", err)
+		os.Exit(1)
+	}
 	time.Sleep(time.Second)
 	err = client[0].Play(0, "1")
-	stderr(fmt.Errorf("play: %v", err))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "play:", err)
+		os.Exit(1)
+	}
 }
 
 func AV1Stop(loc *url.URL) {

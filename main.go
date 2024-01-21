@@ -129,7 +129,7 @@ func main() {
 	log.Printf("starting the stream on port %d (configure your firewall if necessary)", STREAMPORT)
 
 	mux := http.NewServeMux()
-	mux.Handle("/stream", audioSource)
+	mux.Handle("/stream.mp3", audioSource)
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", STREAMPORT),
 		ReadTimeout:  -1,
@@ -154,9 +154,9 @@ func main() {
 		protocol = "x-rincon-mp3radio"
 	}
 	if streamAddress.To4() != nil {
-		streamURL = fmt.Sprintf("%s://%s:%d/stream", protocol, streamAddress, STREAMPORT)
+		streamURL = fmt.Sprintf("%s://%s:%d/stream.mp3", protocol, streamAddress, STREAMPORT)
 	} else {
-		streamURL = fmt.Sprintf("%s://[%s]:%d/stream", protocol, streamAddress, STREAMPORT)
+		streamURL = fmt.Sprintf("%s://[%s]:%d/stream.mp3", protocol, streamAddress, STREAMPORT)
 	}
 	log.Printf("stream URI: %s\n", streamURL)
 	log.Println("setting av1transport URI and playing")
