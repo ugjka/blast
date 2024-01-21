@@ -64,7 +64,7 @@ func main() {
 		if _, err := exec.LookPath(exe); err != nil {
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "dependency:", err)
-				return
+				os.Exit(1)
 			}
 		}
 	}
@@ -100,7 +100,7 @@ func main() {
 	DLNADevice, err = chooseUPNPDevice()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "upnp chooser:", err)
-		return
+		os.Exit(1)
 	}
 
 	if *debug {
@@ -128,7 +128,7 @@ func main() {
 	audioSource, err := chooseAudioSource()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "audio chooser:", err)
-		return
+		os.Exit(1)
 	}
 	// on-demand handling of blast sink
 	if string(audioSource) == BLASTMONITOR {
@@ -137,7 +137,7 @@ func main() {
 		blastSinkID, err = blastSink.Output()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "blast sink:", err)
-			return
+			os.Exit(1)
 		}
 		blastSinkID = bytes.TrimSpace(blastSinkID)
 	}
@@ -147,7 +147,7 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ip chooser:", err)
 		cleanup()
-		return
+		os.Exit(1)
 	}
 	fmt.Println("----------")
 
@@ -195,7 +195,7 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "av1 control:", err)
 		cleanup()
-		return
+		os.Exit(1)
 	}
 	isPlaying = true
 	select {}
