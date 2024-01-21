@@ -34,7 +34,7 @@ func chooseAudioSource() (source, error) {
 	srcCMD := exec.Command("pactl", "-f", "json", "list", "sources", "short")
 	srcData, err := srcCMD.Output()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("pactl sources: %v", err)
 	}
 
 	var srcJSON Sources

@@ -40,7 +40,7 @@ func chooseUPNPDevice() (*goupnp.MaybeRootDevice, error) {
 	fmt.Println("----------")
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("discover: %v", err)
 	}
 
 	if len(roots) == 0 {
