@@ -27,26 +27,26 @@ package main
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-func AV1SetAndPlay(loc *url.URL, stream string) {
+func AV1SetAndPlay(loc *url.URL, stream string) error {
 	client, err := av1.NewAVTransport1ClientsByURL(loc)
-	stderr(err)
+	if err != nil {
+		return err
+	}
 	err = client[0].SetAVTransportURI(0, stream, "")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "set uri:", err)
-		os.Exit(1)
+		return fmt.Errorf("set uri: %v", err)
 	}
 	time.Sleep(time.Second)
 	err = client[0].Play(0, "1")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "play:", err)
-		os.Exit(1)
+		return fmt.Errorf("play: %v", err)
 	}
+	return nil
 }
 
 func AV1Stop(loc *url.URL) {

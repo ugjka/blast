@@ -31,7 +31,7 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-func chooseUPNPDevice() *goupnp.MaybeRootDevice {
+func chooseUPNPDevice() (*goupnp.MaybeRootDevice, error) {
 	fmt.Println("Loading...")
 
 	roots, err := goupnp.DiscoverDevices(av1.URN_AVTransport_1)
@@ -39,10 +39,12 @@ func chooseUPNPDevice() *goupnp.MaybeRootDevice {
 	fmt.Print("\033[1A\033[K")
 	fmt.Println("----------")
 
-	stderr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(roots) == 0 {
-		stderr(fmt.Errorf("no dlna devices on the network found"))
+		return nil, fmt.Errorf("no dlna devices on the network found")
 	}
 	fmt.Println("DLNA receivers")
 
@@ -54,5 +56,5 @@ func chooseUPNPDevice() *goupnp.MaybeRootDevice {
 	fmt.Println("Select the DLNA device:")
 
 	selected := selector(roots)
-	return &roots[selected]
+	return &roots[selected], nil
 }

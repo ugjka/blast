@@ -30,16 +30,20 @@ import (
 	"os/exec"
 )
 
-func chooseAudioSource() source {
+func chooseAudioSource() (source, error) {
 	srcCMD := exec.Command("pactl", "-f", "json", "list", "sources", "short")
 	srcData, err := srcCMD.Output()
-	stderr(err)
+	if err != nil {
+		return "", err
+	}
 
 	var srcJSON Sources
 	err = json.Unmarshal(srcData, &srcJSON)
-	stderr(err)
+	if err != nil {
+		return "", err
+	}
 	if len(srcJSON) == 0 {
-		stderr(fmt.Errorf("no audio sources found"))
+		return "", fmt.Errorf("no audio sources found")
 	}
 
 	fmt.Println("Audio sources")
@@ -53,7 +57,7 @@ func chooseAudioSource() source {
 	fmt.Println("Select the audio source:")
 
 	selected := selector(srcJSON)
-	return source(srcJSON[selected].Name)
+	return source(srcJSON[selected].Name), nil
 }
 
 type Sources []struct {

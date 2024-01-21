@@ -49,6 +49,7 @@ const STREAMPORT = 9000
 const MP3BITRATE = 320
 
 const BLASTMONITOR = "blast.monitor"
+const STREAM_PATH = "/stream.mp3"
 
 var headers = new(bool)
 
@@ -61,7 +62,10 @@ func main() {
 	}
 	for _, exe := range exes {
 		if _, err := exec.LookPath(exe); err != nil {
-			stderr(err)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "dependency:", err)
+				return
+			}
 		}
 	}
 	debug := flag.Bool("debug", false, "print debug info")
@@ -73,13 +77,18 @@ func main() {
 	// trap ctrl+c and kill
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sig
-		fmt.Println()
+
+	cleanup := func() {
 		if blastSinkID != nil {
 			log.Println("unloading the blast sink")
 			exec.Command("pactl", "unload-module", string(blastSinkID)).Run()
 		}
+	}
+
+	go func() {
+		<-sig
+		fmt.Println()
+		cleanup()
 		if isPlaying {
 			log.Println("stopping av1transport and exiting")
 			AV1Stop(DLNADevice.Location)
@@ -87,8 +96,12 @@ func main() {
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
-
-	DLNADevice = chooseUPNPDevice()
+	var err error
+	DLNADevice, err = chooseUPNPDevice()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "upnp chooser:", err)
+		return
+	}
 
 	if *debug {
 		spew.Fdump(os.Stderr, DLNADevice)
@@ -112,24 +125,36 @@ func main() {
 
 	fmt.Println("----------")
 
-	audioSource := chooseAudioSource()
+	audioSource, err := chooseAudioSource()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "audio chooser:", err)
+		return
+	}
 	// on-demand handling of blast sink
 	if string(audioSource) == BLASTMONITOR {
 		blastSink := exec.Command("pactl", "load-module", "module-null-sink", "sink_name=blast")
 		var err error
 		blastSinkID, err = blastSink.Output()
-		stderr(err)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "blast sink:", err)
+			return
+		}
 		blastSinkID = bytes.TrimSpace(blastSinkID)
 	}
 
 	fmt.Println("----------")
-	streamAddress := chooseStreamIP()
+	streamAddress, err := chooseStreamIP()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ip chooser:", err)
+		cleanup()
+		return
+	}
 	fmt.Println("----------")
 
 	log.Printf("starting the stream on port %d (configure your firewall if necessary)", STREAMPORT)
 
 	mux := http.NewServeMux()
-	mux.Handle("/stream.mp3", audioSource)
+	mux.Handle(STREAM_PATH, audioSource)
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", STREAMPORT),
 		ReadTimeout:  -1,
@@ -138,7 +163,11 @@ func main() {
 	}
 	go func() {
 		err := httpServer.ListenAndServe()
-		stderr(err)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "server:", err)
+			cleanup()
+			os.Exit(1)
+		}
 	}()
 	// detect when the stream server is up
 	for {
@@ -154,13 +183,20 @@ func main() {
 		protocol = "x-rincon-mp3radio"
 	}
 	if streamAddress.To4() != nil {
-		streamURL = fmt.Sprintf("%s://%s:%d/stream.mp3", protocol, streamAddress, STREAMPORT)
+		streamURL = fmt.Sprintf("%s://%s:%d%s",
+			protocol, streamAddress, STREAMPORT, STREAM_PATH)
 	} else {
-		streamURL = fmt.Sprintf("%s://[%s]:%d/stream.mp3", protocol, streamAddress, STREAMPORT)
+		streamURL = fmt.Sprintf("%s://[%s]:%d%s",
+			protocol, streamAddress, STREAMPORT, STREAM_PATH)
 	}
 	log.Printf("stream URI: %s\n", streamURL)
 	log.Println("setting av1transport URI and playing")
-	AV1SetAndPlay(DLNADevice.Location, streamURL)
+	err = AV1SetAndPlay(DLNADevice.Location, streamURL)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "av1 control:", err)
+		cleanup()
+		return
+	}
 	isPlaying = true
 	select {}
 }
