@@ -58,8 +58,8 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("ContentFeatures.DLNA.ORG", f.String())
 	}
 
-	const yearSeconds = 365 * 24 * 60 * 60
-	const yearBytes = yearSeconds * (MP3BITRATE / 8) * 1000
+	var yearSeconds = 365 * 24 * 60 * 60
+	var yearBytes = yearSeconds * (MP3BITRATE / 8) * 1000
 	if r.Header.Get("Getmediainfo.sec") == "1" {
 		w.Header().Set("MediaInfo.sec", fmt.Sprintf("SEC_Duration=%d", yearSeconds*1000))
 	}
