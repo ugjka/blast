@@ -44,7 +44,7 @@ Select the lan IP address for the stream:
 2023/07/08 23:53:07 setting av1transport URI and playing
 ```
 
-There's also a `-debug` and `-headers` flags if you want to inspect your DLNA device
+There's also a `-debug` and `-headers` flags (both can't be combined) if you want to inspect your DLNA device
 
 ## Building
 
