@@ -71,9 +71,11 @@ func main() {
 	debug := flag.Bool("debug", false, "print debug info")
 	headers = flag.Bool("headers", false, "print request headers")
 	flag.Parse()
+
 	var blastSinkID []byte
 	var isPlaying bool
 	var DLNADevice *goupnp.MaybeRootDevice
+
 	// trap ctrl+c and kill
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
@@ -99,7 +101,7 @@ func main() {
 	var err error
 	DLNADevice, err = chooseUPNPDevice()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "upnp chooser:", err)
+		fmt.Fprintln(os.Stderr, "upnp:", err)
 		os.Exit(1)
 	}
 
@@ -127,7 +129,7 @@ func main() {
 
 	audioSource, err := chooseAudioSource()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "audio chooser:", err)
+		fmt.Fprintln(os.Stderr, "audio:", err)
 		os.Exit(1)
 	}
 	// on-demand handling of blast sink
@@ -145,7 +147,7 @@ func main() {
 	fmt.Println("----------")
 	streamAddress, err := chooseStreamIP()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "ip chooser:", err)
+		fmt.Fprintln(os.Stderr, "network:", err)
 		cleanup()
 		os.Exit(1)
 	}
@@ -193,7 +195,7 @@ func main() {
 	log.Println("setting av1transport URI and playing")
 	err = AV1SetAndPlay(DLNADevice.Location, streamURL)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "av1 control:", err)
+		fmt.Fprintln(os.Stderr, "transport:", err)
 		cleanup()
 		os.Exit(1)
 	}
