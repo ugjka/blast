@@ -49,7 +49,9 @@ func chooseUPNPDevice() (*goupnp.MaybeRootDevice, error) {
 	fmt.Println("DLNA receivers")
 
 	for i, v := range roots {
-		fmt.Printf("%d: %s\n", i, v.Root.Device.FriendlyName)
+		if v.Root != nil {
+			fmt.Printf("%d: %s\n", i, v.Root.Device.FriendlyName)
+		}
 	}
 
 	fmt.Println("----------")

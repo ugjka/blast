@@ -49,7 +49,7 @@ const STREAMPORT = 9000
 const MP3BITRATE = 320
 
 const BLASTMONITOR = "blast.monitor"
-const STREAM_PATH = "/stream.mp3"
+const STREAM_NAME = "stream.mp3"
 
 var headers = new(bool)
 
@@ -156,7 +156,7 @@ func main() {
 	log.Printf("starting the stream on port %d (configure your firewall if necessary)", STREAMPORT)
 
 	mux := http.NewServeMux()
-	mux.Handle(STREAM_PATH, audioSource)
+	mux.Handle("/"+STREAM_NAME, audioSource)
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", STREAMPORT),
 		ReadTimeout:  -1,
@@ -185,11 +185,18 @@ func main() {
 		protocol = "x-rincon-mp3radio"
 	}
 	if streamAddress.To4() != nil {
-		streamURL = fmt.Sprintf("%s://%s:%d%s",
-			protocol, streamAddress, STREAMPORT, STREAM_PATH)
+		streamURL = fmt.Sprintf("%s://%s:%d/%s",
+			protocol, streamAddress, STREAMPORT, STREAM_NAME)
 	} else {
-		streamURL = fmt.Sprintf("%s://[%s]:%d%s",
-			protocol, streamAddress, STREAMPORT, STREAM_PATH)
+		var zone string
+		if streamAddress.IsLinkLocalUnicast() {
+			ifname, err := findInterface(streamAddress)
+			if err == nil {
+				zone = "%" + ifname
+			}
+		}
+		streamURL = fmt.Sprintf("%s://[%s%s]:%d/%s",
+			protocol, streamAddress, zone, STREAMPORT, STREAM_NAME)
 	}
 	log.Printf("stream URI: %s\n", streamURL)
 	log.Println("setting av1transport URI and playing")

@@ -57,3 +57,22 @@ func chooseStreamIP() (net.IP, error) {
 	selected := selector(ips)
 	return ips[selected], nil
 }
+
+func findInterface(ip net.IP) (string, error) {
+	infs, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	for _, inf := range infs {
+		addrs, err := inf.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			if addr.(*net.IPNet).IP.Equal(ip) {
+				return inf.Name, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no interface found for ip")
+}
