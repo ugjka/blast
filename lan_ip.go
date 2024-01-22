@@ -29,9 +29,11 @@ import (
 	"net"
 )
 
-func chooseStreamIP() net.IP {
+func chooseStreamIP() (net.IP, error) {
 	addrs, err := net.InterfaceAddrs()
-	stderr(err)
+	if err != nil {
+		return nil, err
+	}
 
 	ips := make([]net.IP, 0)
 	for _, addr := range addrs {
@@ -41,7 +43,7 @@ func chooseStreamIP() net.IP {
 	}
 
 	if len(ips) == 0 {
-		stderr(fmt.Errorf("no usable lan ip addresses found"))
+		return nil, fmt.Errorf("no usable lan ip addresses found")
 	}
 
 	fmt.Println("Your LAN ip addresses")
@@ -53,5 +55,5 @@ func chooseStreamIP() net.IP {
 	fmt.Println("Select the lan IP address for the stream:")
 
 	selected := selector(ips)
-	return ips[selected]
+	return ips[selected], nil
 }
