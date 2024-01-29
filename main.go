@@ -78,7 +78,7 @@ func main() {
 
 	// trap ctrl+c and kill
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	cleanup := func() {
 		if blastSinkID != nil {
