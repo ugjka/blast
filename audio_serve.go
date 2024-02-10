@@ -42,20 +42,22 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set some headers
-	w.Header().Add("Cache-Control", "no-cache, no-store")
-	w.Header().Add("Pragma", "no-cache")
+	w.Header().Add("Cache-Control", "No-Cache, No-Store")
+	w.Header().Add("Pragma", "No-Cache")
 	w.Header().Add("Expires", "0")
-	w.Header().Add("Accept-Ranges", "none")
-	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Connection", "Keep-Alive")
+	w.Header().Add("User-Agent", "Blast-DLNA UPnP/1.0 DLNADOC/1.50")
 	// handle devices like Samsung TVs
 	if r.Header.Get("GetContentFeatures.DLNA.ORG") == "1" {
 		f := dlnaContentFeatures{
 			profileName:     "MP3",
 			supportTimeSeek: false,
 			supportRange:    false,
-			flags:           DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE | DLNA_ORG_FLAG_DLNA_V15,
+			flags: DLNA_ORG_FLAG_DLNA_V15 |
+				DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE,
 		}
 		w.Header().Set("ContentFeatures.DLNA.ORG", f.String())
+		w.Header().Set("TransferMode.DLNA.ORG", "Streaming")
 	}
 
 	var yearSeconds = 365 * 24 * 60 * 60
