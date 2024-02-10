@@ -26,7 +26,10 @@ package main
 
 import (
 	"fmt"
+	"html"
+	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/huin/goupnp/dcps/av1"
@@ -37,16 +40,25 @@ func AV1SetAndPlay(loc *url.URL, stream string) error {
 	if err != nil {
 		return err
 	}
-	err = client[0].SetAVTransportURI(0, stream, "")
-	if err != nil {
-		return fmt.Errorf("set uri: %v", err)
+	metadata := didlMetadata(stream)
+	try := func(metadata string) error {
+		err = client[0].SetAVTransportURI(0, stream, metadata)
+		if err != nil {
+			return fmt.Errorf("set uri: %v", err)
+		}
+		time.Sleep(time.Second)
+		err = client[0].Play(0, "1")
+		if err != nil {
+			return fmt.Errorf("play: %v", err)
+		}
+		return nil
 	}
-	time.Sleep(time.Second)
-	err = client[0].Play(0, "1")
-	if err != nil {
-		return fmt.Errorf("play: %v", err)
+	err = try(metadata)
+	if err == nil {
+		return nil
 	}
-	return nil
+	log.Println("trying without metadata")
+	return try("")
 }
 
 func AV1Stop(loc *url.URL) {
@@ -56,3 +68,20 @@ func AV1Stop(loc *url.URL) {
 	}
 	client[0].Stop(0)
 }
+
+func didlMetadata(uri string) string {
+	out := fmt.Sprintf(didlTemplate, uri)
+	out = strings.ReplaceAll(out, "\n", " ")
+	out = html.EscapeString(out)
+	return out
+}
+
+const didlTemplate = `<DIDL-Lite
+xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:sec="http://www.sec.co.kr/dlna"
+xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
+<item id="0" parentID="-1" restricted="false">
+<res protocolInfo="http-get:*:audio/mpeg:*">%s</res>
+</item>
+</DIDL-Lite>`
