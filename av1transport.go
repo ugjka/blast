@@ -40,7 +40,7 @@ func AV1SetAndPlay(loc *url.URL, stream string) error {
 	if err != nil {
 		return err
 	}
-	metadata := didlMetadata(stream)
+
 	try := func(metadata string) error {
 		err = client[0].SetAVTransportURI(0, stream, metadata)
 		if err != nil {
@@ -53,10 +53,13 @@ func AV1SetAndPlay(loc *url.URL, stream string) error {
 		}
 		return nil
 	}
+
+	metadata := didlMetadata(stream)
 	err = try(metadata)
 	if err == nil {
 		return nil
 	}
+
 	log.Println("trying without metadata")
 	return try("")
 }
