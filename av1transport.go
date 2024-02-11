@@ -78,8 +78,7 @@ func didlMetadata(albumart, stream string) string {
 	return out
 }
 
-const didlTemplate = `<?xml version="1.0"?>
-<DIDL-Lite
+const didlTemplate = `<DIDL-Lite
 xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
 xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
