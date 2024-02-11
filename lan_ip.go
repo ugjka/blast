@@ -37,7 +37,8 @@ func chooseStreamIP() (net.IP, error) {
 
 	ips := make([]net.IP, 0)
 	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() &&
+		if ipnet, ok := addr.(*net.IPNet); ok &&
+			!ipnet.IP.IsLoopback() &&
 			(ipnet.IP.To4() != nil || ipnet.IP.To16() != nil) {
 			ips = append(ips, ipnet.IP)
 		}
