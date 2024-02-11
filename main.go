@@ -84,7 +84,7 @@ func main() {
 		err         error
 	)
 
-	// trap ctrl+c and kill
+	// trap ctrl+c and kill and terminal hang up
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
