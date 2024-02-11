@@ -58,7 +58,7 @@ func AV1SetAndPlay(loc *url.URL, stream string) error {
 	if err == nil {
 		return nil
 	}
-
+	log.Println(err)
 	log.Println("trying without metadata")
 	return try("")
 }
