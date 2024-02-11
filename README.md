@@ -1,6 +1,6 @@
 # BLAST
 
-![Blast Logo](logo.png)
+<img src="logo.png" width=256px height=256px alt="Blast logo" title="Blast logo">
 
 ## Stream your Linux audio to DLNA receivers
 
