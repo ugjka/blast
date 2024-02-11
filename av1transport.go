@@ -26,7 +26,6 @@ package main
 
 import (
 	"fmt"
-	"html"
 	"log"
 	"net/url"
 	"strings"
@@ -75,16 +74,23 @@ func AV1Stop(loc *url.URL) {
 func didlMetadata(uri string) string {
 	out := fmt.Sprintf(didlTemplate, uri)
 	out = strings.ReplaceAll(out, "\n", " ")
-	out = html.EscapeString(out)
+	out = strings.ReplaceAll(out, "> <", "><")
 	return out
 }
 
-const didlTemplate = `<DIDL-Lite
+const didlTemplate = `<?xml version="1.0"?>
+<DIDL-Lite
 xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/"
 xmlns:sec="http://www.sec.co.kr/"
-xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
+xmlns:pv="http://www.pv.com/pvns/">
 <item id="0" parentID="-1" restricted="false">
+<upnp:class>object.item.audioItem.musicTrack</upnp:class>
+<dc:title>Audio Cast</dc:title>
+<dc:creator>Blast</dc:creator>
+<upnp:artist>Blast</upnp:artist>
 <res protocolInfo="http-get:*:audio/mpeg:*">%s</res>
 </item>
 </DIDL-Lite>`
