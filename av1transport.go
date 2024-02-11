@@ -34,7 +34,7 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-func AV1SetAndPlay(loc *url.URL, stream string) error {
+func AV1SetAndPlay(loc *url.URL, albumart, stream string) error {
 	client, err := av1.NewAVTransport1ClientsByURL(loc)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func AV1SetAndPlay(loc *url.URL, stream string) error {
 		return nil
 	}
 
-	metadata := didlMetadata(stream)
+	metadata := didlMetadata(albumart, stream)
 	err = try(metadata)
 	if err == nil {
 		return nil
@@ -71,8 +71,8 @@ func AV1Stop(loc *url.URL) {
 	client[0].Stop(0)
 }
 
-func didlMetadata(uri string) string {
-	out := fmt.Sprintf(didlTemplate, uri)
+func didlMetadata(albumart, stream string) string {
+	out := fmt.Sprintf(didlTemplate, albumart, stream)
 	out = strings.ReplaceAll(out, "\n", " ")
 	out = strings.ReplaceAll(out, "> <", "><")
 	return out
@@ -91,6 +91,7 @@ xmlns:pv="http://www.pv.com/pvns/">
 <dc:title>Audio Cast</dc:title>
 <dc:creator>Blast</dc:creator>
 <upnp:artist>Blast</upnp:artist>
+<upnp:albumArtURI>%s</upnp:albumArtURI>
 <res protocolInfo="http-get:*:audio/mpeg:*">%s</res>
 </item>
 </DIDL-Lite>`

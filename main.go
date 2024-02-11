@@ -26,6 +26,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"flag"
 	"fmt"
 	"io"
@@ -42,16 +43,20 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-// open in firewall
-const STREAMPORT = 9000
-
-// lame encoder bitrate
-const MP3BITRATE = 320
-
-const BLASTMONITOR = "blast.monitor"
-const STREAM_NAME = "stream.mp3"
+//go:embed logo.png
+var logobytes []byte
 
 var headers = new(bool)
+
+const (
+	BLASTMONITOR = "blast.monitor"
+	STREAM_NAME  = "stream.mp3"
+	LOGO_NAME    = "logo.png"
+	// open in firewall
+	STREAMPORT = 9000
+	// lame encoder bitrate
+	MP3BITRATE = 320
+)
 
 func main() {
 	// check for dependencies
@@ -157,6 +162,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/"+STREAM_NAME, audioSource)
+	var logoHandler logo = logobytes
+	mux.Handle("/"+LOGO_NAME, logoHandler)
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", STREAMPORT),
 		ReadTimeout:  -1,
@@ -180,6 +187,7 @@ func main() {
 	}
 
 	var streamURL string
+	var albumArtURL string
 	var protocol = "http"
 	if detectSonos(DLNADevice) {
 		protocol = "x-rincon-mp3radio"
@@ -187,6 +195,8 @@ func main() {
 	if streamAddress.To4() != nil {
 		streamURL = fmt.Sprintf("%s://%s:%d/%s",
 			protocol, streamAddress, STREAMPORT, STREAM_NAME)
+		albumArtURL = fmt.Sprintf("http://%s:%d/%s",
+			streamAddress, STREAMPORT, LOGO_NAME)
 	} else {
 		var zone string
 		if streamAddress.IsLinkLocalUnicast() {
@@ -197,10 +207,12 @@ func main() {
 		}
 		streamURL = fmt.Sprintf("%s://[%s%s]:%d/%s",
 			protocol, streamAddress, zone, STREAMPORT, STREAM_NAME)
+		albumArtURL = fmt.Sprintf("http://[%s%s]:%d/%s",
+			streamAddress, zone, STREAMPORT, LOGO_NAME)
 	}
 	log.Printf("stream URI: %s\n", streamURL)
 	log.Println("setting av1transport URI and playing")
-	err = AV1SetAndPlay(DLNADevice.Location, streamURL)
+	err = AV1SetAndPlay(DLNADevice.Location, albumArtURL, streamURL)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "transport:", err)
 		cleanup()
