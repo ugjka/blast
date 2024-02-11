@@ -82,7 +82,7 @@ func didlMetadata(uri string) string {
 const didlTemplate = `<DIDL-Lite
 xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
 xmlns:dc="http://purl.org/dc/elements/1.1/"
-xmlns:sec="http://www.sec.co.kr/dlna"
+xmlns:sec="http://www.sec.co.kr/"
 xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
 <item id="0" parentID="-1" restricted="false">
 <res protocolInfo="http-get:*:audio/mpeg:*">%s</res>
