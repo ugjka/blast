@@ -77,9 +77,12 @@ func main() {
 	headers = flag.Bool("headers", false, "print request headers")
 	flag.Parse()
 
-	var blastSinkID []byte
-	var isPlaying bool
-	var DLNADevice *goupnp.MaybeRootDevice
+	var (
+		blastSinkID []byte
+		isPlaying   bool
+		DLNADevice  *goupnp.MaybeRootDevice
+		err         error
+	)
 
 	// trap ctrl+c and kill
 	sig := make(chan os.Signal, 1)
@@ -103,7 +106,6 @@ func main() {
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
-	var err error
 	DLNADevice, err = chooseUPNPDevice()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "upnp:", err)
@@ -186,9 +188,12 @@ func main() {
 		}
 	}
 
-	var streamURL string
-	var albumArtURL string
-	var protocol = "http"
+	var (
+		streamURL   string
+		albumArtURL string
+		protocol    = "http"
+	)
+
 	if detectSonos(DLNADevice) {
 		protocol = "x-rincon-mp3radio"
 	}
