@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 
 	"github.com/davecgh/go-spew/spew"
@@ -37,8 +38,8 @@ type source string
 
 func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if *headers {
-		spew.Dump(r.Method)
-		spew.Dump(r.Header)
+		spew.Fdump(os.Stderr, r.Method)
+		spew.Fdump(os.Stderr, r.Header)
 	}
 
 	// Set some headers
