@@ -38,6 +38,8 @@ type source string
 
 func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if *headers {
+		spew.Fdump(os.Stderr, r.RemoteAddr)
+		spew.Fdump(os.Stderr, r.URL)
 		spew.Fdump(os.Stderr, r.Method)
 		spew.Fdump(os.Stderr, r.Header)
 	}
