@@ -129,7 +129,9 @@ func main() {
 			}
 			spew.Fprintln(os.Stderr, string(data))
 		}
-		os.Exit(0)
+		if !*headers {
+			os.Exit(0)
+		}
 	}
 
 	fmt.Println("----------")
