@@ -143,7 +143,9 @@ func main() {
 	}
 	// on-demand handling of blast sink
 	if string(audioSource) == BLASTMONITOR {
-		blastSink := exec.Command("pactl", "load-module", "module-null-sink", "sink_name=blast")
+		blastSink := exec.Command(
+			"pactl", "load-module", "module-null-sink", "sink_name=blast",
+		)
 		var err error
 		blastSinkID, err = blastSink.Output()
 		if err != nil {
@@ -162,7 +164,10 @@ func main() {
 	}
 	fmt.Println("----------")
 
-	log.Printf("starting the stream on port %d (configure your firewall if necessary)", STREAMPORT)
+	log.Printf(
+		"starting the stream on port %d (configure your firewall if necessary)",
+		STREAMPORT,
+	)
 
 	mux := http.NewServeMux()
 	mux.Handle("/"+STREAM_NAME, audioSource)

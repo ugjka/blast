@@ -66,7 +66,13 @@ func main() {
 			zip := exec.Command("zip", "")
 			zip.Stderr = os.Stderr
 			zip.Stdout = os.Stdout
-			zip.Args = []string{"-1", fmt.Sprintf("blast_%s_%s.zip", t.os, arch), "blast", "LICENSE", "README.md"}
+			zip.Args = []string{
+				"-1",
+				fmt.Sprintf("blast_%s_%s.zip", t.os, arch),
+				"blast",
+				"LICENSE",
+				"README.md",
+			}
 			if err := zip.Run(); err != nil {
 				panic(err)
 			}
