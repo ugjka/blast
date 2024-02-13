@@ -2,7 +2,7 @@
 
 <img src="logo.png" width=256px height=256px alt="Blast logo" title="Blast logo">
 
-## Stream your Linux audio to DLNA receivers
+## Cast your Linux audio to DLNA receivers
 
 You need `pactl`, `parec` and `ffmpeg` executables/dependencies on your system to run Blast.
 
