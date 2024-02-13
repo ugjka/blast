@@ -85,7 +85,7 @@ xmlns:dc="http://purl.org/dc/elements/1.1/"
 xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/"
 xmlns:sec="http://www.sec.co.kr/"
 xmlns:pv="http://www.pv.com/pvns/">
-<item id="0" parentID="-1" restricted="0">
+<item id="0" parentID="-1" restricted="1">
 <upnp:class>object.item.audioItem.musicTrack</upnp:class>
 <dc:title>Audio Cast</dc:title>
 <dc:creator>Blast</dc:creator>
