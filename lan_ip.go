@@ -29,7 +29,7 @@ import (
 	"net"
 )
 
-func chooseStreamIP() (net.IP, error) {
+func chooseStreamIP(lookup string) (net.IP, error) {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return nil, err
@@ -47,7 +47,18 @@ func chooseStreamIP() (net.IP, error) {
 	if len(ips) == 0 {
 		return nil, fmt.Errorf("no usable lan ip addresses found")
 	}
-
+	if lookup != "" {
+		lookupIp := net.ParseIP(lookup)
+		if lookupIp == nil {
+			return nil, fmt.Errorf("%s: not found", lookup)
+		}
+		for _, ip := range ips {
+			if ip.Equal(lookupIp) {
+				return lookupIp, nil
+			}
+		}
+		return nil, fmt.Errorf("%s: not found", lookup)
+	}
 	fmt.Println("Your LAN ip addresses")
 	for i, ip := range ips {
 		fmt.Printf("%d: %s\n", i, ip)

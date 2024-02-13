@@ -46,18 +46,17 @@ import (
 //go:embed logo.png
 var logobytes []byte
 
-var headers = new(bool)
+var (
+	headers = new(bool)
+	bitrate = new(int)
+	port    = new(int)
+	chunk   = new(int)
+)
 
 const (
 	BLASTMONITOR = "blast.monitor"
 	STREAM_NAME  = "stream.mp3"
 	LOGO_NAME    = "logo.png"
-	// open in firewall
-	STREAMPORT = 9000
-	// lame encoder bitrate
-	MP3BITRATE = 320
-	// chunk size when using chunked tranfer encoding
-	CHUNK_SECONDS = 1
 )
 
 func main() {
@@ -77,6 +76,14 @@ func main() {
 	}
 	debug := flag.Bool("debug", false, "print debug info")
 	headers = flag.Bool("headers", false, "print request headers")
+	// script flags
+	device := flag.String("device", "", "dlna friendly name")
+	source := flag.String("source", "", "audio source (pactl list sources short | cut -f2)")
+	ip := flag.String("ip", "", "ip address")
+	bitrate = flag.Int("bitrate", 320, "mp3 bitrate")
+	port = flag.Int("port", 9000, "stream port")
+	chunk = flag.Int("chunk", 1, "chunk size in seconds")
+
 	flag.Parse()
 
 	var (
@@ -108,7 +115,7 @@ func main() {
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
-	DLNADevice, err = chooseUPNPDevice()
+	DLNADevice, err = chooseUPNPDevice(*device)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "upnp:", err)
 		os.Exit(1)
@@ -135,10 +142,11 @@ func main() {
 			os.Exit(0)
 		}
 	}
+	if *device == "" {
+		fmt.Println("----------")
+	}
 
-	fmt.Println("----------")
-
-	audioSource, err := chooseAudioSource()
+	audioSource, err := chooseAudioSource(*source)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "audio:", err)
 		os.Exit(1)
@@ -157,18 +165,22 @@ func main() {
 		blastSinkID = bytes.TrimSpace(blastSinkID)
 	}
 
-	fmt.Println("----------")
-	streamAddress, err := chooseStreamIP()
+	if *source == "" {
+		fmt.Println("----------")
+	}
+	streamAddress, err := chooseStreamIP(*ip)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "network:", err)
 		cleanup()
 		os.Exit(1)
 	}
-	fmt.Println("----------")
+	if *ip == "" {
+		fmt.Println("----------")
+	}
 
 	log.Printf(
 		"starting the stream on port %d (configure your firewall if necessary)",
-		STREAMPORT,
+		*port,
 	)
 
 	mux := http.NewServeMux()
@@ -176,7 +188,7 @@ func main() {
 	var logoHandler logo = logobytes
 	mux.Handle("/"+LOGO_NAME, logoHandler)
 	httpServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", STREAMPORT),
+		Addr:         fmt.Sprintf(":%d", *port),
 		ReadTimeout:  -1,
 		WriteTimeout: -1,
 		Handler:      mux,
@@ -191,7 +203,7 @@ func main() {
 	}()
 	// detect when the stream server is up
 	for {
-		_, err := net.Dial("tcp", fmt.Sprintf(":%d", STREAMPORT))
+		_, err := net.Dial("tcp", fmt.Sprintf(":%d", *port))
 		if err == nil {
 			break
 		}
@@ -208,9 +220,9 @@ func main() {
 	}
 	if streamAddress.To4() != nil {
 		streamURL = fmt.Sprintf("%s://%s:%d/%s",
-			protocol, streamAddress, STREAMPORT, STREAM_NAME)
+			protocol, streamAddress, *port, STREAM_NAME)
 		albumArtURL = fmt.Sprintf("http://%s:%d/%s",
-			streamAddress, STREAMPORT, LOGO_NAME)
+			streamAddress, *port, LOGO_NAME)
 	} else {
 		var zone string
 		if streamAddress.IsLinkLocalUnicast() {
@@ -220,9 +232,9 @@ func main() {
 			}
 		}
 		streamURL = fmt.Sprintf("%s://[%s%s]:%d/%s",
-			protocol, streamAddress, zone, STREAMPORT, STREAM_NAME)
+			protocol, streamAddress, zone, *port, STREAM_NAME)
 		albumArtURL = fmt.Sprintf("http://[%s%s]:%d/%s",
-			streamAddress, zone, STREAMPORT, LOGO_NAME)
+			streamAddress, zone, *port, LOGO_NAME)
 	}
 	log.Printf("stream URI: %s\n", streamURL)
 	log.Println("setting av1transport URI and playing")

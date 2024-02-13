@@ -73,7 +73,7 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	chunked := ok && r.Proto == "HTTP/1.1"
 
 	if !chunked {
-		var yearBytes = yearSeconds * (MP3BITRATE / 8) * 1000
+		var yearBytes = yearSeconds * (*bitrate / 8) * 1000
 		w.Header().Add("Content-Length", fmt.Sprint(yearBytes))
 	}
 
@@ -92,7 +92,7 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"-f", "s16le",
 		"-ac", "2",
 		"-i", "-",
-		"-b:a", fmt.Sprintf("%dk", MP3BITRATE),
+		"-b:a", fmt.Sprintf("%dk", *bitrate),
 		"-f", "mp3", "-",
 	)
 	parecReader, parecWriter := io.Pipe()
@@ -109,7 +109,7 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			err error
 			n   int
 		)
-		buf := make([]byte, (MP3BITRATE/8)*1000*CHUNK_SECONDS)
+		buf := make([]byte, (*bitrate/8)*1000**chunk)
 		for {
 			n, err = ffmpegReader.Read(buf)
 			if err != nil {

@@ -31,16 +31,30 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-func chooseUPNPDevice() (*goupnp.MaybeRootDevice, error) {
-	fmt.Println("Loading...")
+func chooseUPNPDevice(lookup string) (*goupnp.MaybeRootDevice, error) {
+	if lookup == "" {
+		fmt.Println("Loading...")
+	}
 
 	roots, err := goupnp.DiscoverDevices(av1.URN_AVTransport_1)
 
-	fmt.Print("\033[1A\033[K")
-	fmt.Println("----------")
+	if lookup == "" {
+		fmt.Print("\033[1A\033[K")
+		fmt.Println("----------")
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("discover: %v", err)
+	}
+	if lookup != "" {
+		for _, v := range roots {
+			if v.Root != nil {
+				if v.Root.Device.FriendlyName == lookup {
+					return &v, nil
+				}
+			}
+		}
+		return nil, fmt.Errorf("%s: not found", lookup)
 	}
 
 	if len(roots) == 0 {

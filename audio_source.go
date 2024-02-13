@@ -30,7 +30,7 @@ import (
 	"os/exec"
 )
 
-func chooseAudioSource() (source, error) {
+func chooseAudioSource(lookup string) (source, error) {
 	srcCMD := exec.Command("pactl", "-f", "json", "list", "sources", "short")
 	srcData, err := srcCMD.Output()
 	if err != nil {
@@ -45,10 +45,18 @@ func chooseAudioSource() (source, error) {
 	if len(srcJSON) == 0 {
 		return "", fmt.Errorf("no audio sources found")
 	}
+	srcJSON = append(srcJSON, struct{ Name string }{BLASTMONITOR})
+	if lookup != "" {
+		for _, v := range srcJSON {
+			if v.Name == lookup {
+				return source(lookup), nil
+			}
+		}
+		return "", fmt.Errorf("%s: not found", lookup)
+	}
 
 	fmt.Println("Audio sources")
 	// append for on-demand loading of blast sink
-	srcJSON = append(srcJSON, struct{ Name string }{BLASTMONITOR})
 	for i, v := range srcJSON {
 		fmt.Printf("%d: %s\n", i, v.Name)
 	}
