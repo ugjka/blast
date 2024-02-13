@@ -38,6 +38,7 @@ type source string
 
 func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if *headers {
+		spew.Fdump(os.Stderr, r.Proto)
 		spew.Fdump(os.Stderr, r.RemoteAddr)
 		spew.Fdump(os.Stderr, r.URL)
 		spew.Fdump(os.Stderr, r.Method)
@@ -68,7 +69,8 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "audio/mpeg")
 
-	flusher, chunked := w.(http.Flusher)
+	flusher, ok := w.(http.Flusher)
+	chunked := ok && r.Proto == "HTTP/1.1"
 
 	if !chunked {
 		var yearBytes = yearSeconds * (MP3BITRATE / 8) * 1000
