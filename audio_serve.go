@@ -43,12 +43,10 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		spew.Fdump(os.Stderr, r.Method)
 		spew.Fdump(os.Stderr, r.Header)
 	}
-
 	// Set some headers
 	w.Header().Add("Cache-Control", "No-Cache, No-Store")
 	w.Header().Add("Pragma", "No-Cache")
 	w.Header().Add("Expires", "0")
-	w.Header().Add("Connection", "Keep-Alive")
 	w.Header().Add("User-Agent", "Blast-DLNA UPnP/1.0 DLNADOC/1.50")
 	// handle devices like Samsung TVs
 	if r.Header.Get("GetContentFeatures.DLNA.ORG") == "1" {
@@ -57,19 +55,25 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			supportTimeSeek: false,
 			supportRange:    false,
 			flags: DLNA_ORG_FLAG_DLNA_V15 |
-				DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE,
+				DLNA_ORG_FLAG_CONNECTION_STALL |
+				DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE |
+				DLNA_ORG_FLAG_BACKGROUND_TRANSFERT_MODE,
 		}
 		w.Header().Set("ContentFeatures.DLNA.ORG", f.String())
-		w.Header().Set("TransferMode.DLNA.ORG", "Streaming")
 	}
 
 	var yearSeconds = 365 * 24 * 60 * 60
-	var yearBytes = yearSeconds * (MP3BITRATE / 8) * 1000
 	if r.Header.Get("Getmediainfo.sec") == "1" {
 		w.Header().Set("MediaInfo.sec", fmt.Sprintf("SEC_Duration=%d", yearSeconds*1000))
 	}
-	w.Header().Add("Content-Length", fmt.Sprint(yearBytes))
 	w.Header().Add("Content-Type", "audio/mpeg")
+
+	flusher, chunked := w.(http.Flusher)
+
+	if !chunked {
+		var yearBytes = yearSeconds * (MP3BITRATE / 8) * 1000
+		w.Header().Add("Content-Length", fmt.Sprint(yearBytes))
+	}
 
 	if r.Method == http.MethodHead {
 		w.WriteHeader(http.StatusOK)
@@ -98,8 +102,26 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parecCMD.Start()
 	ffmpegCMD.Start()
-
-	io.Copy(w, ffmpegReader)
+	var (
+		err error
+		n   int
+	)
+	buf := make([]byte, (MP3BITRATE/8)*1000*CHUNK_SECONDS)
+	if chunked {
+		for {
+			n, err = ffmpegReader.Read(buf)
+			if err != nil {
+				break
+			}
+			_, err = w.Write(buf[:n])
+			if err != nil {
+				break
+			}
+			flusher.Flush()
+		}
+	} else {
+		io.Copy(w, ffmpegReader)
+	}
 
 	if parecCMD.Process != nil {
 		parecCMD.Process.Kill()

@@ -56,6 +56,8 @@ const (
 	STREAMPORT = 9000
 	// lame encoder bitrate
 	MP3BITRATE = 320
+	// chunk size when using chunked tranfer encoding
+	CHUNK_SECONDS = 1
 )
 
 func main() {
