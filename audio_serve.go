@@ -104,12 +104,12 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parecCMD.Start()
 	ffmpegCMD.Start()
-	var (
-		err error
-		n   int
-	)
-	buf := make([]byte, (MP3BITRATE/8)*1000*CHUNK_SECONDS)
 	if chunked {
+		var (
+			err error
+			n   int
+		)
+		buf := make([]byte, (MP3BITRATE/8)*1000*CHUNK_SECONDS)
 		for {
 			n, err = ffmpegReader.Read(buf)
 			if err != nil {
