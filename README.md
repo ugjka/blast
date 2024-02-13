@@ -46,6 +46,29 @@ Select the lan IP address for the stream:
 
 There's also a `-debug` and `-headers` flags if you want to inspect your DLNA device
 
+### Flags for scripting
+
+```
+[ugjka@ugjka blast]$ blast -h
+Usage of blast:
+  -bitrate int
+        mp3 bitrate (default 320)
+  -chunk int
+        chunk size in seconds (default 1)
+  -debug
+        print debug info
+  -device string
+        dlna friendly name
+  -headers
+        print request headers
+  -ip string
+        ip address
+  -port int
+        stream port (default 9000)
+  -source string
+        audio source (pactl list sources short | cut -f2)
+```
+
 ## Building
 
 You need the `go` and `go-tools` toolchain, also `git`
