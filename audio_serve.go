@@ -25,19 +25,30 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"slices"
 
 	"github.com/davecgh/go-spew/spew"
 )
 
-type source string
+type stream struct {
+	sink         string
+	mime         string
+	format       string
+	bitrate      int
+	chunk        int
+	printheaders bool
+	contentfeat  dlnaContentFeatures
+}
 
-func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if *headers {
+func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if s.printheaders {
 		spew.Fdump(os.Stderr, r.Proto)
 		spew.Fdump(os.Stderr, r.RemoteAddr)
 		spew.Fdump(os.Stderr, r.URL)
@@ -51,29 +62,20 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("User-Agent", "Blast-DLNA UPnP/1.0 DLNADOC/1.50")
 	// handle devices like Samsung TVs
 	if r.Header.Get("GetContentFeatures.DLNA.ORG") == "1" {
-		f := dlnaContentFeatures{
-			profileName:     "MP3",
-			supportTimeSeek: false,
-			supportRange:    false,
-			flags: DLNA_ORG_FLAG_DLNA_V15 |
-				DLNA_ORG_FLAG_CONNECTION_STALL |
-				DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE |
-				DLNA_ORG_FLAG_BACKGROUND_TRANSFERT_MODE,
-		}
-		w.Header().Set("ContentFeatures.DLNA.ORG", f.String())
+		w.Header().Set("ContentFeatures.DLNA.ORG", s.contentfeat.String())
 	}
 
 	var yearSeconds = 365 * 24 * 60 * 60
 	if r.Header.Get("Getmediainfo.sec") == "1" {
 		w.Header().Set("MediaInfo.sec", fmt.Sprintf("SEC_Duration=%d", yearSeconds*1000))
 	}
-	w.Header().Add("Content-Type", "audio/mpeg")
+	w.Header().Add("Content-Type", s.mime)
 
 	flusher, ok := w.(http.Flusher)
 	chunked := ok && r.Proto == "HTTP/1.1"
 
 	if !chunked {
-		var yearBytes = yearSeconds * (*bitrate / 8) * 1000
+		var yearBytes = yearSeconds * (s.bitrate / 8) * 1000
 		w.Header().Add("Content-Length", fmt.Sprint(yearBytes))
 	}
 
@@ -85,16 +87,33 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	parecCMD := exec.Command("parec", "-d", s.sink, "-n", "blast-rec")
+	parecErrBuf := bytes.NewBuffer(nil)
 
-	parecCMD := exec.Command("parec", "-d", string(s), "-n", "blast-rec")
-	ffmpegCMD := exec.Command(
-		"ffmpeg",
+	ffargs := []string{"-loglevel", "error",
 		"-f", "s16le",
 		"-ac", "2",
 		"-i", "-",
-		"-b:a", fmt.Sprintf("%dk", *bitrate),
-		"-f", "mp3", "-",
-	)
+		"-f", s.format, "-"}
+	if s.bitrate != 0 {
+		ffargs = slices.Insert(
+			ffargs,
+			len(ffargs)-3,
+			"-b:a", fmt.Sprintf("%dk", s.bitrate),
+		)
+	}
+	if s.format == "m4a" || s.format == "mp4" {
+		ffargs = slices.Insert(
+			ffargs,
+			len(ffargs)-3,
+			"-movflags", "+faststart",
+		)
+	}
+	ffmpegCMD := exec.Command("ffmpeg", ffargs...)
+
+	ffmpegErrBuf := bytes.NewBuffer(nil)
+	ffmpegCMD.Stderr = ffmpegErrBuf
+
 	parecReader, parecWriter := io.Pipe()
 	parecCMD.Stdout = parecWriter
 	ffmpegCMD.Stdin = parecReader
@@ -102,14 +121,25 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ffmpegReader, ffmpegWriter := io.Pipe()
 	ffmpegCMD.Stdout = ffmpegWriter
 
-	parecCMD.Start()
-	ffmpegCMD.Start()
+	err := parecCMD.Start()
+	if err != nil {
+		log.Printf("parec failed: %v", err)
+		return
+	}
+	err = ffmpegCMD.Start()
+	if err != nil {
+		log.Printf("ffmpeg failed: %v", err)
+		return
+	}
 	if chunked {
 		var (
 			err error
 			n   int
 		)
-		buf := make([]byte, (*bitrate/8)*1000**chunk)
+		buf := make([]byte, (s.bitrate/8)*1000*s.chunk)
+		if s.bitrate == 0 {
+			buf = make([]byte, 44100*16*2)
+		}
 		for {
 			n, err = ffmpegReader.Read(buf)
 			if err != nil {
@@ -130,5 +160,11 @@ func (s source) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if ffmpegCMD.Process != nil {
 		ffmpegCMD.Process.Kill()
+	}
+	if parecErrBuf.Len() > 0 {
+		log.Printf("parec stderr: %s", parecErrBuf)
+	}
+	if ffmpegErrBuf.Len() > 0 {
+		log.Printf("ffmpeg stderr: %s", ffmpegErrBuf)
 	}
 }

@@ -36,6 +36,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/davecgh/go-spew/spew"
@@ -43,21 +44,13 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-//go:embed logo.png
-var logobytes []byte
-
-var (
-	headers = new(bool)
-	bitrate = new(int)
-	port    = new(int)
-	chunk   = new(int)
-)
-
 const (
 	BLASTMONITOR = "blast.monitor"
-	STREAM_NAME  = "stream.mp3"
 	LOGO_NAME    = "logo.png"
 )
+
+//go:embed logo.png
+var logobytes []byte
 
 func main() {
 	// check for dependencies
@@ -75,14 +68,17 @@ func main() {
 		}
 	}
 	debug := flag.Bool("debug", false, "print debug info")
-	headers = flag.Bool("headers", false, "print request headers")
+	headers := flag.Bool("headers", false, "print request headers")
 	// script flags
 	device := flag.String("device", "", "dlna friendly name")
 	source := flag.String("source", "", "audio source (pactl list sources short | cut -f2)")
 	ip := flag.String("ip", "", "ip address")
-	bitrate = flag.Int("bitrate", 320, "mp3 bitrate")
-	port = flag.Int("port", 9000, "stream port")
-	chunk = flag.Int("chunk", 1, "chunk size in seconds")
+	bitrate := flag.Int("bitrate", 320, "mp3 bitrate")
+	port := flag.Int("port", 9000, "stream port")
+	chunk := flag.Int("chunk", 1, "chunk size in seconds")
+	format := flag.String("format", "mp3", "stream audio codec")
+	mime := flag.String("mime", "audio/mpeg", "stream mime type")
+	usewav := flag.Bool("usewav", false, "use wav audio")
 
 	flag.Parse()
 
@@ -146,13 +142,13 @@ func main() {
 		fmt.Println("----------")
 	}
 
-	audioSource, err := chooseAudioSource(*source)
+	sink, err := chooseAudioSource(*source)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "audio:", err)
 		os.Exit(1)
 	}
 	// on-demand handling of blast sink
-	if string(audioSource) == BLASTMONITOR {
+	if sink == BLASTMONITOR {
 		blastSink := exec.Command(
 			"pactl", "load-module", "module-null-sink", "sink_name=blast",
 		)
@@ -179,12 +175,37 @@ func main() {
 	}
 
 	log.Printf(
-		"starting the stream on port %d (configure your firewall if necessary)",
+		"starting the stream on port %d "+
+			"(configure your firewall if necessary)",
 		*port,
 	)
+	streamHandler := stream{
+		sink:         sink,
+		mime:         *mime,
+		format:       *format,
+		bitrate:      *bitrate,
+		chunk:        *chunk,
+		printheaders: *headers,
+	}
+	if *usewav {
+		streamHandler.format = "wav"
+		streamHandler.mime = "audio/wav"
+	}
+
+	streamHandler.contentfeat = dlnaContentFeatures{
+		profileName:     strings.ToUpper(streamHandler.format),
+		supportTimeSeek: true,
+		supportRange:    false,
+		flags: DLNA_ORG_FLAG_DLNA_V15 |
+			DLNA_ORG_FLAG_CONNECTION_STALL |
+			DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE |
+			DLNA_ORG_FLAG_BACKGROUND_TRANSFERT_MODE,
+	}
+
+	streamName := "stream." + strings.ToLower(streamHandler.format)
 
 	mux := http.NewServeMux()
-	mux.Handle("/"+STREAM_NAME, audioSource)
+	mux.Handle("/"+streamName, streamHandler)
 	var logoHandler logo = logobytes
 	mux.Handle("/"+LOGO_NAME, logoHandler)
 	httpServer := &http.Server{
@@ -218,9 +239,10 @@ func main() {
 	if detectSonos(DLNADevice) {
 		protocol = "x-rincon-mp3radio"
 	}
+
 	if streamAddress.To4() != nil {
 		streamURL = fmt.Sprintf("%s://%s:%d/%s",
-			protocol, streamAddress, *port, STREAM_NAME)
+			protocol, streamAddress, *port, streamName)
 		albumArtURL = fmt.Sprintf("http://%s:%d/%s",
 			streamAddress, *port, LOGO_NAME)
 	} else {
@@ -232,18 +254,27 @@ func main() {
 			}
 		}
 		streamURL = fmt.Sprintf("%s://[%s%s]:%d/%s",
-			protocol, streamAddress, zone, *port, STREAM_NAME)
+			protocol, streamAddress, zone, *port, streamName)
 		albumArtURL = fmt.Sprintf("http://[%s%s]:%d/%s",
 			streamAddress, zone, *port, LOGO_NAME)
 	}
+
 	log.Printf("stream URI: %s\n", streamURL)
+
 	log.Println("setting av1transport URI and playing")
-	err = AV1SetAndPlay(DLNADevice.Location, albumArtURL, streamURL)
+	err = AV1SetAndPlay(
+		DLNADevice.Location,
+		streamHandler.contentfeat,
+		albumArtURL,
+		streamHandler.mime,
+		streamURL,
+	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "transport:", err)
 		cleanup()
 		os.Exit(1)
 	}
+
 	isPlaying = true
 	select {}
 }

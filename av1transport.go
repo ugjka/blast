@@ -34,14 +34,14 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-func AV1SetAndPlay(loc *url.URL, albumart, stream string) error {
+func AV1SetAndPlay(loc *url.URL, cf dlnaContentFeatures, logoURI, mimeType, streamURI string) error {
 	client, err := av1.NewAVTransport1ClientsByURL(loc)
 	if err != nil {
 		return err
 	}
 
 	try := func(metadata string) error {
-		err = client[0].SetAVTransportURI(0, stream, metadata)
+		err = client[0].SetAVTransportURI(0, streamURI, metadata)
 		if err != nil {
 			return fmt.Errorf("set uri: %v", err)
 		}
@@ -52,8 +52,10 @@ func AV1SetAndPlay(loc *url.URL, albumart, stream string) error {
 		}
 		return nil
 	}
-
-	metadata := didlMetadata(albumart, stream)
+	cf.profileName = ""
+	metadata := fmt.Sprintf(didlTemplate, logoURI, mimeType, cf, streamURI)
+	metadata = strings.ReplaceAll(metadata, "\n", " ")
+	metadata = strings.ReplaceAll(metadata, "> <", "><")
 	err = try(metadata)
 	if err == nil {
 		return nil
@@ -71,13 +73,6 @@ func AV1Stop(loc *url.URL) {
 	client[0].Stop(0)
 }
 
-func didlMetadata(albumart, stream string) string {
-	out := fmt.Sprintf(didlTemplate, albumart, stream)
-	out = strings.ReplaceAll(out, "\n", " ")
-	out = strings.ReplaceAll(out, "> <", "><")
-	return out
-}
-
 const didlTemplate = `<DIDL-Lite
 xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
 xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
@@ -91,6 +86,9 @@ xmlns:pv="http://www.pv.com/pvns/">
 <dc:creator>Blast</dc:creator>
 <upnp:artist>Blast</upnp:artist>
 <upnp:albumArtURI>%s</upnp:albumArtURI>
-<res protocolInfo="http-get:*:audio/mpeg:*">%s</res>
+<res protocolInfo="http-get:*:%s:%s"
+bitsPerSample="16"
+sampleFrequency="44100"
+nrAudioChannels="2">%s</res>
 </item>
 </DIDL-Lite>`
