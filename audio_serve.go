@@ -45,6 +45,9 @@ type stream struct {
 	chunk        int
 	printheaders bool
 	contentfeat  dlnaContentFeatures
+	bitdepth     int
+	samplerate   int
+	channels     int
 }
 
 func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -87,12 +90,24 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	parecCMD := exec.Command("parec", "-d", s.sink, "-n", "blast-rec")
+	parecCMD := exec.Command(
+		"parec",
+		"--device", s.sink,
+		"--client-name", "blast-rec",
+		"--rate", fmt.Sprint(s.samplerate),
+		"--channels", fmt.Sprint(s.channels),
+		"--format", fmt.Sprintf("s%dle", s.bitdepth),
+	)
 	parecErrBuf := bytes.NewBuffer(nil)
 
+	if s.format == "lpcm" {
+		s.format = fmt.Sprintf("s%dle", s.bitdepth)
+	}
+
 	ffargs := []string{"-loglevel", "error",
-		"-f", "s16le",
-		"-ac", "2",
+		"-f", fmt.Sprintf("s%dle", s.bitdepth),
+		"-ac", fmt.Sprint(s.channels),
+		"-ar", fmt.Sprint(s.samplerate),
 		"-i", "-",
 		"-f", s.format, "-"}
 	if s.bitrate != 0 {
@@ -100,13 +115,6 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			ffargs,
 			len(ffargs)-3,
 			"-b:a", fmt.Sprintf("%dk", s.bitrate),
-		)
-	}
-	if s.format == "m4a" || s.format == "mp4" {
-		ffargs = slices.Insert(
-			ffargs,
-			len(ffargs)-3,
-			"-movflags", "+faststart",
 		)
 	}
 	ffmpegCMD := exec.Command("ffmpeg", ffargs...)
@@ -138,7 +146,7 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		)
 		buf := make([]byte, (s.bitrate/8)*1000*s.chunk)
 		if s.bitrate == 0 {
-			buf = make([]byte, 44100*16*2)
+			buf = make([]byte, s.samplerate*s.bitdepth*s.channels)
 		}
 		for {
 			n, err = ffmpegReader.Read(buf)

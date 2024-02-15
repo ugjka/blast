@@ -34,14 +34,21 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-func AV1SetAndPlay(loc *url.URL, cf dlnaContentFeatures, logoURI, mimeType, streamURI string) error {
-	client, err := av1.NewAVTransport1ClientsByURL(loc)
+type av1setup struct {
+	location  *url.URL
+	stream    stream
+	logoURI   string
+	streamURI string
+}
+
+func AV1SetAndPlay(av av1setup) error {
+	client, err := av1.NewAVTransport1ClientsByURL(av.location)
 	if err != nil {
 		return err
 	}
 
 	try := func(metadata string) error {
-		err = client[0].SetAVTransportURI(0, streamURI, metadata)
+		err = client[0].SetAVTransportURI(0, av.streamURI, metadata)
 		if err != nil {
 			return fmt.Errorf("set uri: %v", err)
 		}
@@ -52,8 +59,16 @@ func AV1SetAndPlay(loc *url.URL, cf dlnaContentFeatures, logoURI, mimeType, stre
 		}
 		return nil
 	}
-	cf.profileName = ""
-	metadata := fmt.Sprintf(didlTemplate, logoURI, mimeType, cf, streamURI)
+	metadata := fmt.Sprintf(
+		didlTemplate,
+		av.logoURI,
+		av.stream.mime,
+		av.stream.contentfeat,
+		av.stream.bitdepth,
+		av.stream.samplerate,
+		av.stream.channels,
+		av.streamURI,
+	)
 	metadata = strings.ReplaceAll(metadata, "\n", " ")
 	metadata = strings.ReplaceAll(metadata, "> <", "><")
 	err = try(metadata)
@@ -87,8 +102,8 @@ xmlns:pv="http://www.pv.com/pvns/">
 <upnp:artist>Blast</upnp:artist>
 <upnp:albumArtURI>%s</upnp:albumArtURI>
 <res protocolInfo="http-get:*:%s:%s"
-bitsPerSample="16"
-sampleFrequency="44100"
-nrAudioChannels="2">%s</res>
+bitsPerSample="%d"
+sampleFrequency="%d"
+nrAudioChannels="%d">%s</res>
 </item>
 </DIDL-Lite>`

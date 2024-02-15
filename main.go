@@ -73,12 +73,16 @@ func main() {
 	device := flag.String("device", "", "dlna friendly name")
 	source := flag.String("source", "", "audio source (pactl list sources short | cut -f2)")
 	ip := flag.String("ip", "", "ip address")
-	bitrate := flag.Int("bitrate", 320, "mp3 bitrate")
+	bitrate := flag.Int("bitrate", 320, "format bitrate")
 	port := flag.Int("port", 9000, "stream port")
 	chunk := flag.Int("chunk", 1, "chunk size in seconds")
 	format := flag.String("format", "mp3", "stream audio codec")
 	mime := flag.String("mime", "audio/mpeg", "stream mime type")
 	usewav := flag.Bool("usewav", false, "use wav audio")
+	bits := flag.Int("bits", 16, "audio bitdepth")
+	uselpcm := flag.Bool("uselpcm", false, "use lpcm audio")
+	rate := flag.Int("rate", 44100, "audio samplerate")
+	channels := flag.Int("channels", 2, "audio channels")
 
 	flag.Parse()
 
@@ -186,10 +190,17 @@ func main() {
 		bitrate:      *bitrate,
 		chunk:        *chunk,
 		printheaders: *headers,
+		bitdepth:     *bits,
+		samplerate:   *rate,
+		channels:     *channels,
 	}
 	if *usewav {
 		streamHandler.format = "wav"
 		streamHandler.mime = "audio/wav"
+	}
+	if *uselpcm {
+		streamHandler.format = "lpcm"
+		streamHandler.mime = fmt.Sprintf("audio/L%d;rate=%d;channels=%d", *bits, *rate, *channels)
 	}
 
 	streamHandler.contentfeat = dlnaContentFeatures{
@@ -262,13 +273,13 @@ func main() {
 	log.Printf("stream URI: %s\n", streamURL)
 
 	log.Println("setting av1transport URI and playing")
-	err = AV1SetAndPlay(
-		DLNADevice.Location,
-		streamHandler.contentfeat,
-		albumArtURL,
-		streamHandler.mime,
-		streamURL,
-	)
+	av := av1setup{
+		location:  DLNADevice.Location,
+		stream:    streamHandler,
+		logoURI:   albumArtURL,
+		streamURI: streamURL,
+	}
+	err = AV1SetAndPlay(av)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "transport:", err)
 		cleanup()
