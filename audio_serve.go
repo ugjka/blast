@@ -146,7 +146,7 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		)
 		buf := make([]byte, (s.bitrate/8)*1000*s.chunk)
 		if s.bitrate == 0 {
-			buf = make([]byte, s.samplerate*s.bitdepth*s.channels)
+			buf = make([]byte, s.samplerate*s.bitdepth*s.channels*s.chunk)
 		}
 		for {
 			n, err = ffmpegReader.Read(buf)
