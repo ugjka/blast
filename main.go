@@ -79,8 +79,9 @@ func main() {
 	format := flag.String("format", "mp3", "stream audio codec")
 	mime := flag.String("mime", "audio/mpeg", "stream mime type")
 	usewav := flag.Bool("usewav", false, "use wav audio")
-	bits := flag.Int("bits", 16, "audio bitdepth")
 	uselpcm := flag.Bool("uselpcm", false, "use lpcm audio")
+	useaac := flag.Bool("useaac", false, "use aac audio")
+	bits := flag.Int("bits", 16, "audio bitdepth")
 	rate := flag.Int("rate", 44100, "audio samplerate")
 	channels := flag.Int("channels", 2, "audio channels")
 
@@ -197,10 +198,16 @@ func main() {
 	if *usewav {
 		streamHandler.format = "wav"
 		streamHandler.mime = "audio/wav"
+		streamHandler.bitrate = 0
 	}
 	if *uselpcm {
 		streamHandler.format = "lpcm"
 		streamHandler.mime = fmt.Sprintf("audio/L%d;rate=%d;channels=%d", *bits, *rate, *channels)
+		streamHandler.bitrate = 0
+	}
+	if *useaac {
+		streamHandler.format = "adts"
+		streamHandler.mime = "audio/aac"
 	}
 
 	streamHandler.contentfeat = dlnaContentFeatures{

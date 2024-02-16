@@ -99,6 +99,7 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"--format", fmt.Sprintf("s%dle", s.bitdepth),
 	)
 	parecErrBuf := bytes.NewBuffer(nil)
+	parecCMD.Stderr = parecErrBuf
 
 	if s.format == "lpcm" {
 		s.format = fmt.Sprintf("s%dle", s.bitdepth)
@@ -117,6 +118,14 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"-b:a", fmt.Sprintf("%dk", s.bitrate),
 		)
 	}
+	if s.format == fmt.Sprintf("s%dle", s.bitdepth) {
+		ffargs = slices.Insert(
+			ffargs,
+			len(ffargs)-1,
+			"-c:a", fmt.Sprintf("pcm_s%dle", s.bitdepth),
+		)
+	}
+	//spew.Dump(strings.Join(ffargs, " "))
 	ffmpegCMD := exec.Command("ffmpeg", ffargs...)
 
 	ffmpegErrBuf := bytes.NewBuffer(nil)
