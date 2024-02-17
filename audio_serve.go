@@ -114,11 +114,15 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 
 	var raw bool
+	// wav can't have big endian
+	var pcm = fmt.Sprintf("pcm_s%dle", s.bitdepth)
 	if s.format == "lpcm" || s.format == "wav" {
 		raw = true
 	}
 	if s.format == "lpcm" {
+		// lpcm can have big endian
 		s.format = fmt.Sprintf("s%d%s", s.bitdepth, endianess)
+		pcm = fmt.Sprintf("pcm_s%d%s", s.bitdepth, endianess)
 	}
 
 	ffargs := []string{
@@ -139,7 +143,7 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ffargs = slices.Insert(
 			ffargs,
 			len(ffargs)-1,
-			"-c:a", fmt.Sprintf("pcm_s%d%s", s.bitdepth, endianess),
+			"-c:a", pcm,
 		)
 	}
 	//spew.Dump(strings.Join(ffargs, " "))
