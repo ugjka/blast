@@ -50,6 +50,7 @@ type stream struct {
 	samplerate   int
 	channels     int
 	nochunked    bool
+	bige         bool
 }
 
 func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -98,13 +99,17 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	endianess := "le"
+	if s.bige {
+		endianess = "be"
+	}
 	parecCMD := exec.Command(
 		"parec",
 		"--device="+s.sink,
 		"--client-name=blast-rec",
 		"--rate="+fmt.Sprint(s.samplerate),
 		"--channels="+fmt.Sprint(s.channels),
-		"--format="+fmt.Sprintf("s%dle", s.bitdepth),
+		"--format="+fmt.Sprintf("s%d%s", s.bitdepth, endianess),
 		"--raw",
 	)
 
@@ -113,11 +118,11 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		raw = true
 	}
 	if s.format == "lpcm" {
-		s.format = fmt.Sprintf("s%dle", s.bitdepth)
+		s.format = fmt.Sprintf("s%d%s", s.bitdepth, endianess)
 	}
 
 	ffargs := []string{
-		"-f", fmt.Sprintf("s%dle", s.bitdepth),
+		"-f", fmt.Sprintf("s%d%s", s.bitdepth, endianess),
 		"-ac", fmt.Sprint(s.channels),
 		"-ar", fmt.Sprint(s.samplerate),
 		"-i", "-",
@@ -134,7 +139,7 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ffargs = slices.Insert(
 			ffargs,
 			len(ffargs)-1,
-			"-c:a", fmt.Sprintf("pcm_s%dle", s.bitdepth),
+			"-c:a", fmt.Sprintf("pcm_s%d%s", s.bitdepth, endianess),
 		)
 	}
 	//spew.Dump(strings.Join(ffargs, " "))
