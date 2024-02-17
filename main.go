@@ -267,7 +267,7 @@ func main() {
 		protocol    = "http"
 	)
 
-	if !*dummy && detectSonos(DLNADevice) {
+	if !*dummy && *format == "mp3" && detectSonos(DLNADevice) {
 		protocol = "x-rincon-mp3radio"
 	}
 
