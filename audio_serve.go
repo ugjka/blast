@@ -92,11 +92,12 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	parecCMD := exec.Command(
 		"parec",
-		"--device", s.sink,
-		"--client-name", "blast-rec",
-		"--rate", fmt.Sprint(s.samplerate),
-		"--channels", fmt.Sprint(s.channels),
-		"--format", fmt.Sprintf("s%dle", s.bitdepth),
+		"--device="+s.sink,
+		"--client-name=blast-rec",
+		"--rate="+fmt.Sprint(s.samplerate),
+		"--channels="+fmt.Sprint(s.channels),
+		"--format="+fmt.Sprintf("s%dle", s.bitdepth),
+		"--raw",
 	)
 	parecErrBuf := bytes.NewBuffer(nil)
 	parecCMD.Stderr = parecErrBuf
