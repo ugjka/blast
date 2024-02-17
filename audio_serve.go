@@ -25,7 +25,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -33,6 +32,7 @@ import (
 	"os"
 	"os/exec"
 	"slices"
+	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 )
@@ -99,19 +99,26 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"--format="+fmt.Sprintf("s%dle", s.bitdepth),
 		"--raw",
 	)
-	parecErrBuf := bytes.NewBuffer(nil)
-	parecCMD.Stderr = parecErrBuf
+	if *logblast {
+		fmt.Fprintln(os.Stderr, strings.Join(parecCMD.Args, " "))
+		parecCMD.Stderr = os.Stderr
+	}
 
+	var raw bool
+	if s.format == "lpcm" || s.format == "wav" {
+		raw = true
+	}
 	if s.format == "lpcm" {
 		s.format = fmt.Sprintf("s%dle", s.bitdepth)
 	}
 
-	ffargs := []string{"-loglevel", "error",
+	ffargs := []string{
 		"-f", fmt.Sprintf("s%dle", s.bitdepth),
 		"-ac", fmt.Sprint(s.channels),
 		"-ar", fmt.Sprint(s.samplerate),
 		"-i", "-",
-		"-f", s.format, "-"}
+		"-f", s.format, "-",
+	}
 	if s.bitrate != 0 {
 		ffargs = slices.Insert(
 			ffargs,
@@ -119,7 +126,7 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"-b:a", fmt.Sprintf("%dk", s.bitrate),
 		)
 	}
-	if s.format == fmt.Sprintf("s%dle", s.bitdepth) {
+	if raw {
 		ffargs = slices.Insert(
 			ffargs,
 			len(ffargs)-1,
@@ -129,8 +136,10 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//spew.Dump(strings.Join(ffargs, " "))
 	ffmpegCMD := exec.Command("ffmpeg", ffargs...)
 
-	ffmpegErrBuf := bytes.NewBuffer(nil)
-	ffmpegCMD.Stderr = ffmpegErrBuf
+	if *logblast {
+		fmt.Fprintln(os.Stderr, strings.Join(ffmpegCMD.Args, " "))
+		ffmpegCMD.Stderr = os.Stderr
+	}
 
 	parecReader, parecWriter := io.Pipe()
 	parecCMD.Stdout = parecWriter
@@ -178,11 +187,5 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if ffmpegCMD.Process != nil {
 		ffmpegCMD.Process.Kill()
-	}
-	if parecErrBuf.Len() > 0 {
-		log.Printf("parec stderr: %s", parecErrBuf)
-	}
-	if ffmpegErrBuf.Len() > 0 {
-		log.Printf("ffmpeg stderr: %s", ffmpegErrBuf)
 	}
 }

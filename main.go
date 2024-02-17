@@ -52,6 +52,8 @@ const (
 //go:embed logo.png
 var logobytes []byte
 
+var logblast = new(bool)
+
 func main() {
 	// check for dependencies
 	exes := []string{
@@ -84,6 +86,8 @@ func main() {
 	bits := flag.Int("bits", 16, "audio bitdepth")
 	rate := flag.Int("rate", 44100, "audio samplerate")
 	channels := flag.Int("channels", 2, "audio channels")
+	dummy := flag.Bool("dummy", false, "skip dlna device")
+	logblast = flag.Bool("log", false, "log parec and ffmpeg")
 
 	flag.Parse()
 
@@ -109,17 +113,19 @@ func main() {
 		<-sig
 		fmt.Println()
 		cleanup()
-		if isPlaying {
+		if isPlaying && !*dummy {
 			log.Println("stopping av1transport and exiting")
 			AV1Stop(DLNADevice.Location)
 		}
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
-	DLNADevice, err = chooseUPNPDevice(*device)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "upnp:", err)
-		os.Exit(1)
+	if !*dummy {
+		DLNADevice, err = chooseUPNPDevice(*device)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "upnp:", err)
+			os.Exit(1)
+		}
 	}
 
 	if *debug {
@@ -254,7 +260,7 @@ func main() {
 		protocol    = "http"
 	)
 
-	if detectSonos(DLNADevice) {
+	if !*dummy && detectSonos(DLNADevice) {
 		protocol = "x-rincon-mp3radio"
 	}
 
@@ -280,17 +286,19 @@ func main() {
 	log.Printf("stream URI: %s\n", streamURL)
 
 	log.Println("setting av1transport URI and playing")
-	av := av1setup{
-		location:  DLNADevice.Location,
-		stream:    streamHandler,
-		logoURI:   albumArtURL,
-		streamURI: streamURL,
-	}
-	err = AV1SetAndPlay(av)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "transport:", err)
-		cleanup()
-		os.Exit(1)
+	if !*dummy {
+		av := av1setup{
+			location:  DLNADevice.Location,
+			stream:    streamHandler,
+			logoURI:   albumArtURL,
+			streamURI: streamURL,
+		}
+		err = AV1SetAndPlay(av)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "transport:", err)
+			cleanup()
+			os.Exit(1)
+		}
 	}
 
 	isPlaying = true
