@@ -48,6 +48,7 @@ type stream struct {
 	bitdepth     int
 	samplerate   int
 	channels     int
+	nochunked    bool
 }
 
 func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -75,11 +76,17 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", s.mime)
 
 	flusher, ok := w.(http.Flusher)
-	chunked := ok && r.Proto == "HTTP/1.1"
+	chunked := ok && r.Proto == "HTTP/1.1" && !s.nochunked
 
 	if !chunked {
-		var yearBytes = yearSeconds * (s.bitrate / 8) * 1000
-		w.Header().Add("Content-Length", fmt.Sprint(yearBytes))
+		size := yearSeconds * (s.bitrate / 8) * 1000
+		if s.bitrate == 0 {
+			size = s.samplerate * s.bitdepth * s.channels * yearSeconds
+		}
+		w.Header().Add(
+			"Content-Length",
+			fmt.Sprint(size),
+		)
 	}
 
 	if r.Method == http.MethodHead {

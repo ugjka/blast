@@ -69,25 +69,26 @@ func main() {
 			}
 		}
 	}
-	debug := flag.Bool("debug", false, "print debug info")
-	headers := flag.Bool("headers", false, "print request headers")
-	// script flags
 	device := flag.String("device", "", "dlna friendly name")
 	source := flag.String("source", "", "audio source (pactl list sources short | cut -f2)")
 	ip := flag.String("ip", "", "ip address")
-	bitrate := flag.Int("bitrate", 320, "format bitrate")
 	port := flag.Int("port", 9000, "stream port")
 	chunk := flag.Int("chunk", 1, "chunk size in seconds")
+	bitrate := flag.Int("bitrate", 320, "format bitrate")
 	format := flag.String("format", "mp3", "stream audio codec")
 	mime := flag.String("mime", "audio/mpeg", "stream mime type")
-	usewav := flag.Bool("usewav", false, "use wav audio")
-	uselpcm := flag.Bool("uselpcm", false, "use lpcm audio")
 	useaac := flag.Bool("useaac", false, "use aac audio")
+	useflac := flag.Bool("useflac", false, "use flac audio")
+	uselpcm := flag.Bool("uselpcm", false, "use lpcm audio")
+	usewav := flag.Bool("usewav", false, "use wav audio")
 	bits := flag.Int("bits", 16, "audio bitdepth")
 	rate := flag.Int("rate", 44100, "audio samplerate")
 	channels := flag.Int("channels", 2, "audio channels")
 	dummy := flag.Bool("dummy", false, "skip dlna device")
+	debug := flag.Bool("debug", false, "print debug info")
+	headers := flag.Bool("headers", false, "print request headers")
 	logblast = flag.Bool("log", false, "log parec and ffmpeg")
+	nochunked := flag.Bool("nochunked", false, "disable chunked tranfer endcoding")
 
 	flag.Parse()
 
@@ -200,10 +201,15 @@ func main() {
 		bitdepth:     *bits,
 		samplerate:   *rate,
 		channels:     *channels,
+		nochunked:    *nochunked,
 	}
-	if *usewav {
-		streamHandler.format = "wav"
-		streamHandler.mime = "audio/wav"
+	if *useaac {
+		streamHandler.format = "adts"
+		streamHandler.mime = "audio/aac"
+	}
+	if *useflac {
+		streamHandler.format = "flac"
+		streamHandler.mime = "audio/flac"
 		streamHandler.bitrate = 0
 	}
 	if *uselpcm {
@@ -211,9 +217,10 @@ func main() {
 		streamHandler.mime = fmt.Sprintf("audio/L%d;rate=%d;channels=%d", *bits, *rate, *channels)
 		streamHandler.bitrate = 0
 	}
-	if *useaac {
-		streamHandler.format = "adts"
-		streamHandler.mime = "audio/aac"
+	if *usewav {
+		streamHandler.format = "wav"
+		streamHandler.mime = "audio/wav"
+		streamHandler.bitrate = 0
 	}
 
 	streamHandler.contentfeat = dlnaContentFeatures{
