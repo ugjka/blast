@@ -45,6 +45,7 @@ func chooseAudioSource(lookup string) (string, error) {
 	if len(srcJSON) == 0 {
 		return "", fmt.Errorf("no audio sources found")
 	}
+	// append for on-demand loading of blast sink
 	srcJSON = append(srcJSON, struct{ Name string }{BLASTMONITOR})
 	if lookup != "" {
 		for _, v := range srcJSON {
@@ -56,7 +57,6 @@ func chooseAudioSource(lookup string) (string, error) {
 	}
 
 	fmt.Println("Audio sources")
-	// append for on-demand loading of blast sink
 	for i, v := range srcJSON {
 		fmt.Printf("%d: %s\n", i, v.Name)
 	}
