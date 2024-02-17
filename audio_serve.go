@@ -99,10 +99,6 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"--format="+fmt.Sprintf("s%dle", s.bitdepth),
 		"--raw",
 	)
-	if *logblast {
-		fmt.Fprintln(os.Stderr, strings.Join(parecCMD.Args, " "))
-		parecCMD.Stderr = os.Stderr
-	}
 
 	var raw bool
 	if s.format == "lpcm" || s.format == "wav" {
@@ -137,6 +133,8 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ffmpegCMD := exec.Command("ffmpeg", ffargs...)
 
 	if *logblast {
+		fmt.Fprintln(os.Stderr, strings.Join(parecCMD.Args, " "))
+		parecCMD.Stderr = os.Stderr
 		fmt.Fprintln(os.Stderr, strings.Join(ffmpegCMD.Args, " "))
 		ffmpegCMD.Stderr = os.Stderr
 	}
