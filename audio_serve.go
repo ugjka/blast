@@ -167,7 +167,6 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var wg sync.WaitGroup
-	//defer fmt.Println("done")
 	defer wg.Wait()
 
 	err := parecCMD.Start()
@@ -181,7 +180,6 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cleanup()
 		if err != nil && !strings.Contains(err.Error(), "signal") {
 			log.Println("parec:", err)
-			w.WriteHeader(http.StatusInternalServerError)
 		}
 		wg.Done()
 	}()
@@ -197,7 +195,6 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cleanup()
 		if err != nil && !strings.Contains(err.Error(), "signal") {
 			log.Println("ffmpeg:", err)
-			w.WriteHeader(http.StatusInternalServerError)
 		}
 		wg.Done()
 	}()
