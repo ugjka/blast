@@ -158,11 +158,23 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("parec failed: %v", err)
 		return
 	}
+	go func() {
+		err := parecCMD.Wait()
+		if err != nil && !strings.Contains(err.Error(), "signal") {
+			log.Println("parec:", err)
+		}
+	}()
 	err = ffmpegCMD.Start()
 	if err != nil {
 		log.Printf("ffmpeg failed: %v", err)
 		return
 	}
+	go func() {
+		err := ffmpegCMD.Wait()
+		if err != nil {
+			log.Println("ffmpeg:", err)
+		}
+	}()
 	if chunked {
 		var (
 			err error
