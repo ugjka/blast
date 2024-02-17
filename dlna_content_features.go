@@ -31,9 +31,15 @@ type dlnaContentFeatures struct {
 }
 
 func (c dlnaContentFeatures) String() (out string) {
-	out += fmt.Sprintf("DLNA.ORG_PN=%s;", c.profileName)
-	out += fmt.Sprintf("DLNA.ORG_OP=%d%d;", bti(c.supportTimeSeek), bti(c.supportRange))
-	out += fmt.Sprintf("DLNA.ORG_CI=%d;", bti(c.transcoded))
+	if c.profileName != "" {
+		out += fmt.Sprintf("DLNA.ORG_PN=%s;", c.profileName)
+	}
+	if c.supportTimeSeek || c.supportRange {
+		out += fmt.Sprintf("DLNA.ORG_OP=%d%d;", bti(c.supportTimeSeek), bti(c.supportRange))
+	}
+	if c.transcoded {
+		out += fmt.Sprintf("DLNA.ORG_CI=%d;", bti(c.transcoded))
+	}
 	out += formatDLNAFlags(c.flags)
 	return
 }

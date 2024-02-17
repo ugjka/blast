@@ -44,29 +44,55 @@ Select the lan IP address for the stream:
 2023/07/08 23:53:07 setting av1transport URI and playing
 ```
 
-There's also a `-debug` and `-headers` flags if you want to inspect your DLNA device
+There's also a `-debug` and `-headers` flags if you want to inspect your DLNA device. Also `-log` to inspect what parec and ffmpeg is doing. 
 
-### Flags for scripting
+### Non-interactive usage and extra flags
 
 ```
 [ugjka@ugjka blast]$ blast -h
 Usage of blast:
+  -bige
+        use big endian for capture and raw formats
   -bitrate int
-        mp3 bitrate (default 320)
+        audio format bitrate (default 320)
+  -bits int
+        audio bitdepth (default 16)
+  -channels int
+        audio channels (default 2)
   -chunk int
-        chunk size in seconds (default 1)
+        chunked size in seconds (default 1)
   -debug
         print debug info
   -device string
-        dlna friendly name
+        dlna device's friendly name
+  -dummy
+        only serve content
+  -format string
+        stream audio format (default "mp3")
   -headers
         print request headers
   -ip string
-        ip address
+        host ip address
+  -log
+        log parec and ffmpeg stderr
+  -mime string
+        stream mime type (default "audio/mpeg")
+  -nochunked
+        disable chunked tranfer endcoding
   -port int
         stream port (default 9000)
+  -rate int
+        audio sample rate (default 44100)
   -source string
         audio source (pactl list sources short | cut -f2)
+  -useaac
+        use aac audio
+  -useflac
+        use flac audio
+  -uselpcm
+        use lpcm audio
+  -usewav
+        use wav audio
 ```
 
 ## Building
@@ -96,7 +122,7 @@ This is for pipewire-pulse users.
 
 ## Caveats
 
-* You need to allow port 9000 from LAN for the DLNA receiver to be able to access the HTTP stream
+* You need to allow port 9000 from LAN for the DLNA receiver to be able to access the HTTP stream, you can change it with `-port` flag
 * blast monitor sink may not be visible in the pulse control applet unless you enable virtual streams
 
 ## Trivia

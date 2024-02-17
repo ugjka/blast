@@ -36,6 +36,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/davecgh/go-spew/spew"
@@ -43,21 +44,15 @@ import (
 	"github.com/huin/goupnp/dcps/av1"
 )
 
+const (
+	BLASTMONITOR = "blast.monitor"
+	LOGO_PATH    = "logo.png"
+)
+
 //go:embed logo.png
 var logobytes []byte
 
-var (
-	headers = new(bool)
-	bitrate = new(int)
-	port    = new(int)
-	chunk   = new(int)
-)
-
-const (
-	BLASTMONITOR = "blast.monitor"
-	STREAM_NAME  = "stream.mp3"
-	LOGO_NAME    = "logo.png"
-)
+var logblast = new(bool)
 
 func main() {
 	// check for dependencies
@@ -74,15 +69,27 @@ func main() {
 			}
 		}
 	}
-	debug := flag.Bool("debug", false, "print debug info")
-	headers = flag.Bool("headers", false, "print request headers")
-	// script flags
-	device := flag.String("device", "", "dlna friendly name")
+	device := flag.String("device", "", "dlna device's friendly name")
 	source := flag.String("source", "", "audio source (pactl list sources short | cut -f2)")
-	ip := flag.String("ip", "", "ip address")
-	bitrate = flag.Int("bitrate", 320, "mp3 bitrate")
-	port = flag.Int("port", 9000, "stream port")
-	chunk = flag.Int("chunk", 1, "chunk size in seconds")
+	ip := flag.String("ip", "", "host ip address")
+	port := flag.Int("port", 9000, "stream port")
+	chunk := flag.Int("chunk", 1, "chunk size in seconds")
+	bitrate := flag.Int("bitrate", 320, "audio format bitrate")
+	format := flag.String("format", "mp3", "stream audio format")
+	mime := flag.String("mime", "audio/mpeg", "stream mime type")
+	useaac := flag.Bool("useaac", false, "use aac audio")
+	useflac := flag.Bool("useflac", false, "use flac audio")
+	uselpcm := flag.Bool("uselpcm", false, "use lpcm audio")
+	usewav := flag.Bool("usewav", false, "use wav audio")
+	bits := flag.Int("bits", 16, "audio bitdepth")
+	rate := flag.Int("rate", 44100, "audio sample rate")
+	channels := flag.Int("channels", 2, "audio channels")
+	dummy := flag.Bool("dummy", false, "only serve content")
+	debug := flag.Bool("debug", false, "print debug info")
+	headers := flag.Bool("headers", false, "print request headers")
+	logblast = flag.Bool("log", false, "log parec and ffmpeg stderr")
+	nochunked := flag.Bool("nochunked", false, "disable chunked tranfer endcoding")
+	bige := flag.Bool("bige", false, "use big endian for capture and raw formats")
 
 	flag.Parse()
 
@@ -108,17 +115,19 @@ func main() {
 		<-sig
 		fmt.Println()
 		cleanup()
-		if isPlaying {
+		if isPlaying && !*dummy {
 			log.Println("stopping av1transport and exiting")
 			AV1Stop(DLNADevice.Location)
 		}
 		fmt.Println("terminated...")
 		os.Exit(0)
 	}()
-	DLNADevice, err = chooseUPNPDevice(*device)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "upnp:", err)
-		os.Exit(1)
+	if !*dummy {
+		DLNADevice, err = chooseUPNPDevice(*device)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "upnp:", err)
+			os.Exit(1)
+		}
 	}
 
 	if *debug {
@@ -146,13 +155,13 @@ func main() {
 		fmt.Println("----------")
 	}
 
-	audioSource, err := chooseAudioSource(*source)
+	sink, err := chooseAudioSource(*source)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "audio:", err)
 		os.Exit(1)
 	}
 	// on-demand handling of blast sink
-	if string(audioSource) == BLASTMONITOR {
+	if sink == BLASTMONITOR {
 		blastSink := exec.Command(
 			"pactl", "load-module", "module-null-sink", "sink_name=blast",
 		)
@@ -168,7 +177,7 @@ func main() {
 	if *source == "" {
 		fmt.Println("----------")
 	}
-	streamAddress, err := chooseStreamIP(*ip)
+	streamHost, err := chooseStreamIP(*ip)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "network:", err)
 		cleanup()
@@ -179,14 +188,59 @@ func main() {
 	}
 
 	log.Printf(
-		"starting the stream on port %d (configure your firewall if necessary)",
+		"starting the stream on port %d "+
+			"(configure your firewall if necessary)",
 		*port,
 	)
+	streamHandler := stream{
+		sink:         sink,
+		mime:         *mime,
+		format:       *format,
+		bitrate:      *bitrate,
+		chunk:        *chunk,
+		printheaders: *headers,
+		bitdepth:     *bits,
+		samplerate:   *rate,
+		channels:     *channels,
+		nochunked:    *nochunked,
+		bige:         *bige,
+	}
+	if *useaac {
+		streamHandler.format = "adts"
+		streamHandler.mime = "audio/aac"
+	}
+	if *useflac {
+		streamHandler.format = "flac"
+		streamHandler.mime = "audio/flac"
+		streamHandler.bitrate = 0
+	}
+	if *uselpcm {
+		streamHandler.format = "lpcm"
+		streamHandler.mime = fmt.Sprintf("audio/L%d;rate=%d;channels=%d", *bits, *rate, *channels)
+		streamHandler.bitrate = 0
+	}
+	if *usewav {
+		streamHandler.format = "wav"
+		streamHandler.mime = "audio/wav"
+		streamHandler.bitrate = 0
+	}
+
+	streamHandler.contentfeat = dlnaContentFeatures{
+		profileName:     strings.ToUpper(streamHandler.format),
+		supportTimeSeek: true,
+		supportRange:    false,
+		flags: DLNA_ORG_FLAG_DLNA_V15 |
+			DLNA_ORG_FLAG_CONNECTION_STALL |
+			DLNA_ORG_FLAG_STREAMING_TRANSFER_MODE |
+			DLNA_ORG_FLAG_BACKGROUND_TRANSFERT_MODE,
+	}
+
+	streamPath := "stream." + strings.ToLower(streamHandler.format)
 
 	mux := http.NewServeMux()
-	mux.Handle("/"+STREAM_NAME, audioSource)
+	mux.Handle("/"+streamPath, streamHandler)
 	var logoHandler logo = logobytes
-	mux.Handle("/"+LOGO_NAME, logoHandler)
+	mux.Handle("/"+LOGO_PATH, logoHandler)
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", *port),
 		ReadTimeout:  -1,
@@ -210,40 +264,52 @@ func main() {
 	}
 
 	var (
-		streamURL   string
-		albumArtURL string
-		protocol    = "http"
+		streamURI string
+		logoURI   string
+		protocol  = "http"
 	)
 
-	if detectSonos(DLNADevice) {
+	if !*dummy && *format == "mp3" && detectSonos(DLNADevice) {
 		protocol = "x-rincon-mp3radio"
 	}
-	if streamAddress.To4() != nil {
-		streamURL = fmt.Sprintf("%s://%s:%d/%s",
-			protocol, streamAddress, *port, STREAM_NAME)
-		albumArtURL = fmt.Sprintf("http://%s:%d/%s",
-			streamAddress, *port, LOGO_NAME)
+
+	if streamHost.To4() != nil {
+		streamURI = fmt.Sprintf("%s://%s:%d/%s",
+			protocol, streamHost, *port, streamPath)
+		logoURI = fmt.Sprintf("http://%s:%d/%s",
+			streamHost, *port, LOGO_PATH)
 	} else {
 		var zone string
-		if streamAddress.IsLinkLocalUnicast() {
-			ifname, err := findInterface(streamAddress)
+		if streamHost.IsLinkLocalUnicast() {
+			ifname, err := findInterface(streamHost)
 			if err == nil {
 				zone = "%" + ifname
 			}
 		}
-		streamURL = fmt.Sprintf("%s://[%s%s]:%d/%s",
-			protocol, streamAddress, zone, *port, STREAM_NAME)
-		albumArtURL = fmt.Sprintf("http://[%s%s]:%d/%s",
-			streamAddress, zone, *port, LOGO_NAME)
+		streamURI = fmt.Sprintf("%s://[%s%s]:%d/%s",
+			protocol, streamHost, zone, *port, streamPath)
+		logoURI = fmt.Sprintf("http://[%s%s]:%d/%s",
+			streamHost, zone, *port, LOGO_PATH)
 	}
-	log.Printf("stream URI: %s\n", streamURL)
+
+	log.Printf("stream URI: %s\n", streamURI)
+
 	log.Println("setting av1transport URI and playing")
-	err = AV1SetAndPlay(DLNADevice.Location, albumArtURL, streamURL)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "transport:", err)
-		cleanup()
-		os.Exit(1)
+	if !*dummy {
+		av := av1setup{
+			location:  DLNADevice.Location,
+			stream:    streamHandler,
+			logoURI:   logoURI,
+			streamURI: streamURI,
+		}
+		err = AV1SetAndPlay(av)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "transport:", err)
+			cleanup()
+			os.Exit(1)
+		}
 	}
+
 	isPlaying = true
 	select {}
 }
