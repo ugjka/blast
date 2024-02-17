@@ -171,7 +171,7 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	go func() {
 		err := ffmpegCMD.Wait()
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "signal") {
 			log.Println("ffmpeg:", err)
 		}
 	}()
