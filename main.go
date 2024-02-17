@@ -73,7 +73,7 @@ func main() {
 	source := flag.String("source", "", "audio source (pactl list sources short | cut -f2)")
 	ip := flag.String("ip", "", "host ip address")
 	port := flag.Int("port", 9000, "stream port")
-	chunk := flag.Int("chunk", 1, "chunked size in secconds")
+	chunk := flag.Int("chunk", 1, "chunk size in seconds")
 	bitrate := flag.Int("bitrate", 320, "audio format bitrate")
 	format := flag.String("format", "mp3", "stream audio format")
 	mime := flag.String("mime", "audio/mpeg", "stream mime type")
