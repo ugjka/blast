@@ -52,7 +52,7 @@ There's also a `-debug` and `-headers` flags if you want to inspect your DLNA de
 [ugjka@ugjka blast]$ blast -h
 Usage of blast:
   -bige
-        use big endian for capture and raw formats
+        use big endian for capture and lpcm format
   -bitrate int
         audio format bitrate (default 320)
   -bits int
@@ -60,7 +60,7 @@ Usage of blast:
   -channels int
         audio channels (default 2)
   -chunk int
-        chunked size in seconds (default 1)
+        chunk size in seconds (default 1)
   -debug
         print debug info
   -device string

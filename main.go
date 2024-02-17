@@ -89,7 +89,7 @@ func main() {
 	headers := flag.Bool("headers", false, "print request headers")
 	logblast = flag.Bool("log", false, "log parec and ffmpeg stderr")
 	nochunked := flag.Bool("nochunked", false, "disable chunked tranfer endcoding")
-	bige := flag.Bool("bige", false, "use big endian for capture and raw formats")
+	bige := flag.Bool("bige", false, "use big endian for capture and lpcm format")
 
 	flag.Parse()
 
