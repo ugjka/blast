@@ -52,6 +52,10 @@ func main() {
 				"s390x",
 			},
 		},
+		{
+			"android",
+			[]string{"arm64"},
+		},
 	}
 
 	for _, t := range targets {
