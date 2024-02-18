@@ -103,7 +103,7 @@ Usage of blast:
 
 <img src="blast.monitor.png" width=300px alt="blast.monitor example" title="blast.monitor example">
 
-* If none of the built-in codecs presets satisfy you, you can specify your own with `-mime` and `-format`. For example: `-mime audio/ac3 -format ac3`, `-mime audio/opus -format opus` or `-mime "audio/mpeg" -format mp2`
+* If none of the built-in codecs presets satisfy you, you can specify your own with `-mime` and `-format`. For example: `-mime audio/ac3 -format ac3`, `-mime audio/opus -format opus`, `-mime "audio/x-caf" -format caf` or `-mime "audio/mpeg" -format mp2`
 
 * You can change audio features with `-rate`, `-bits` and `-channels`, e.g. `blast -rate 48000 -bits 24 -channels 1`
 
