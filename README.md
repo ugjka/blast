@@ -101,7 +101,7 @@ Usage of blast:
 
 * If you choose `blast.monitor` as a source, you can send apps' audio to it (in pavucotrol or whatever applet you use) without streaming entire the desktop audio
 
-<img src="blast.monitor.png" width=300px alt="blast.monitor example" title="blast.monitor example">
+<img src="img.blast.monitor.png" width=300px alt="blast.monitor example" title="blast.monitor example">
 
 * If none of the built-in codecs presets satisfy you, you can specify your own with `-mime` and `-format`. For example: `-mime audio/ac3 -format ac3`, `-mime audio/opus -format opus`, `-mime "audio/x-caf" -format caf` or `-mime "audio/mpeg" -format mp2`
 
