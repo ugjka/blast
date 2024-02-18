@@ -93,6 +93,8 @@ Usage of blast:
         use lpcm little-endian audio
   -usewav
         use wav audio
+  -version
+        show blast version
 ```
 
 ## Building

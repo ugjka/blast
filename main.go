@@ -47,6 +47,7 @@ import (
 const (
 	BLASTMONITOR = "blast.monitor"
 	LOGO_PATH    = "logo.png"
+	VERSION      = "v0.6.1"
 )
 
 //go:embed logo.png
@@ -90,8 +91,14 @@ func main() {
 	headers := flag.Bool("headers", false, "print request headers")
 	logblast = flag.Bool("log", false, "log parec and ffmpeg stderr")
 	nochunked := flag.Bool("nochunked", false, "disable chunked tranfer endcoding")
+	version := flag.Bool("version", false, "show blast version")
 
 	flag.Parse()
+
+	if *version {
+		fmt.Fprintln(os.Stderr, VERSION)
+		os.Exit(0)
+	}
 
 	var (
 		blastSinkID []byte
