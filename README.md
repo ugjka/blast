@@ -1,6 +1,6 @@
 # BLAST
 
-<img src="logo.png" width=256px height=256px alt="Blast logo" title="Blast logo">
+<img src="logo.png" width=256px alt="Blast logo" title="Blast logo">
 
 ## Cast your Linux audio to DLNA receivers
 
@@ -44,7 +44,7 @@ Select the lan IP address for the stream:
 2023/07/08 23:53:07 setting av1transport URI and playing
 ```
 
-There's also a `-debug` and `-headers` flags if you want to inspect your DLNA device. Also `-log` to inspect what parec and ffmpeg is doing. 
+There's also a `-debug` and `-headers` flags if you want to inspect your DLNA device. Also, `-log` to inspect what parec and ffmpeg are doing. 
 
 ### Non-interactive usage and extra flags
 
@@ -96,6 +96,14 @@ Usage of blast:
   -version
         show blast version
 ```
+
+## Tips and tricks
+
+* If you choose `blast.monitor` as a source, you can send apps' audio to it (in pavucotrol or whatever applet you use) without streaming entire the desktop audio
+
+<img src="blast.monitor.png" width=300px alt="blast.monitor example" title="blast.monitor example">
+
+* If none of the built-in codecs presets satisfy you, you can specify your own with `-mime` and `-format`
 
 ## Building
 
