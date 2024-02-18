@@ -163,14 +163,8 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ffmpegReader, ffmpegWriter := io.Pipe()
 	ffmpegCMD.Stdout = ffmpegWriter
 
-	cleanup := func() {
-		parecReader.Close()
-		parecWriter.Close()
-		ffmpegReader.Close()
-		ffmpegWriter.Close()
-	}
-
 	var wg sync.WaitGroup
+	//defer fmt.Println("done")
 	defer wg.Wait()
 
 	err := parecCMD.Start()
@@ -181,7 +175,6 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wg.Add(1)
 	go func() {
 		err := parecCMD.Wait()
-		cleanup()
 		if err != nil && !strings.Contains(err.Error(), "signal") {
 			log.Println("parec:", err)
 		}
@@ -196,10 +189,10 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	wg.Add(1)
 	go func() {
 		err := ffmpegCMD.Wait()
-		cleanup()
 		if err != nil && !strings.Contains(err.Error(), "signal") {
 			log.Println("ffmpeg:", err)
 		}
+		ffmpegWriter.Close()
 		wg.Done()
 	}()
 	if chunked {
@@ -232,5 +225,8 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if ffmpegCMD.Process != nil {
 		ffmpegCMD.Process.Kill()
 	}
-	cleanup()
+	parecReader.Close()
+	parecWriter.Close()
+	ffmpegReader.Close()
+	ffmpegWriter.Close()
 }
