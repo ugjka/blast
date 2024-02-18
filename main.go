@@ -80,6 +80,7 @@ func main() {
 	useaac := flag.Bool("useaac", false, "use aac audio")
 	useflac := flag.Bool("useflac", false, "use flac audio")
 	uselpcm := flag.Bool("uselpcm", false, "use lpcm audio")
+	uselpcmle := flag.Bool("uselpcmle", false, "use lpcm little-endian audio")
 	usewav := flag.Bool("usewav", false, "use wav audio")
 	bits := flag.Int("bits", 16, "audio bitdepth")
 	rate := flag.Int("rate", 44100, "audio sample rate")
@@ -89,7 +90,6 @@ func main() {
 	headers := flag.Bool("headers", false, "print request headers")
 	logblast = flag.Bool("log", false, "log parec and ffmpeg stderr")
 	nochunked := flag.Bool("nochunked", false, "disable chunked tranfer endcoding")
-	bige := flag.Bool("bige", false, "use big endian for capture and lpcm format")
 
 	flag.Parse()
 
@@ -203,23 +203,26 @@ func main() {
 		samplerate:   *rate,
 		channels:     *channels,
 		nochunked:    *nochunked,
-		bige:         *bige,
 	}
-	if *useaac {
+
+	switch {
+	case *useaac:
 		streamHandler.format = "adts"
 		streamHandler.mime = "audio/aac"
-	}
-	if *useflac {
+	case *useflac:
 		streamHandler.format = "flac"
 		streamHandler.mime = "audio/flac"
 		streamHandler.bitrate = 0
-	}
-	if *uselpcm {
+	case *uselpcm:
 		streamHandler.format = "lpcm"
 		streamHandler.mime = fmt.Sprintf("audio/L%d;rate=%d;channels=%d", *bits, *rate, *channels)
 		streamHandler.bitrate = 0
-	}
-	if *usewav {
+		streamHandler.be = true
+	case *uselpcmle:
+		streamHandler.format = "lpcm"
+		streamHandler.mime = fmt.Sprintf("audio/L%d;rate=%d;channels=%d", *bits, *rate, *channels)
+		streamHandler.bitrate = 0
+	case *usewav:
 		streamHandler.format = "wav"
 		streamHandler.mime = "audio/wav"
 		streamHandler.bitrate = 0

@@ -51,8 +51,6 @@ There's also a `-debug` and `-headers` flags if you want to inspect your DLNA de
 ```
 [ugjka@ugjka blast]$ blast -h
 Usage of blast:
-  -bige
-        use big endian for capture and lpcm format
   -bitrate int
         audio format bitrate (default 320)
   -bits int
@@ -91,6 +89,8 @@ Usage of blast:
         use flac audio
   -uselpcm
         use lpcm audio
+  -uselpcmle
+        use lpcm little-endian audio
   -usewav
         use wav audio
 ```

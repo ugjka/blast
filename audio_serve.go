@@ -50,7 +50,7 @@ type stream struct {
 	samplerate   int
 	channels     int
 	nochunked    bool
-	bige         bool
+	be           bool
 }
 
 func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +100,7 @@ func (s stream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	endianess := "le"
-	if s.bige {
+	if s.be {
 		endianess = "be"
 	}
 	parecCMD := exec.Command(
