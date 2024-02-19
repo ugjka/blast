@@ -47,7 +47,7 @@ import (
 const (
 	BLASTMONITOR = "blast.monitor"
 	LOGO_PATH    = "logo.png"
-	VERSION      = "v0.6.2a"
+	VERSION      = "v0.6.2"
 )
 
 //go:embed logo.png
