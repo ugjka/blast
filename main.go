@@ -33,7 +33,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -138,33 +137,34 @@ func main() {
 
 	if *debug {
 		spew.Fdump(os.Stderr, DLNADevice)
-		var location *url.URL
+		var location string
+		urn := detectAVtransport(DLNADevice)
 		switch {
-		case strings.HasSuffix(DLNADevice.USN, "AVTransport:1"):
+		case urn == av1.URN_AVTransport_1:
 			clients, err := av1.NewAVTransport1ClientsByURL(DLNADevice.Location)
-			if err != nil {
-				clients, err := av1.NewAVTransport2ClientsByURL(DLNADevice.Location)
-				spew.Fdump(os.Stderr, clients[0], err)
-				location = clients[0].Location
-			} else {
-				spew.Fdump(os.Stderr, clients[0], err)
-				location = clients[0].Location
+			if err == nil {
+				location = clients[0].Location.String()
 			}
-		case strings.HasSuffix(DLNADevice.USN, "AVTransport:2"):
+			spew.Fdump(os.Stderr, clients, err)
+
+		case urn == av1.URN_AVTransport_2:
 			clients, err := av1.NewAVTransport2ClientsByURL(DLNADevice.Location)
-			spew.Fdump(os.Stderr, clients[0], err)
-			location = clients[0].Location
+			if err == nil {
+				location = clients[0].Location.String()
+			}
+			spew.Fdump(os.Stderr, clients, err)
 		}
 
 		get := func() {
-			resp, err := http.Get(location.String())
+			if location == "" {
+				return
+			}
+			resp, err := http.Get(location)
 			if err != nil {
-				spew.Fprintln(os.Stderr, err)
 				return
 			}
 			data, err := io.ReadAll(resp.Body)
 			if err != nil {
-				spew.Fprintln(os.Stderr, err)
 				return
 			}
 			spew.Fprintln(os.Stderr, string(data))

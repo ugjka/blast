@@ -47,21 +47,30 @@ type avtransport interface {
 	Stop(InstanceID uint32) (err error)
 }
 
+func detectAVtransport(dev *goupnp.MaybeRootDevice) string {
+	transport := dev.Root.Device.FindService(av1.URN_AVTransport_1)
+	if len(transport) > 0 {
+		return av1.URN_AVTransport_1
+	}
+	transport = dev.Root.Device.FindService(av1.URN_AVTransport_2)
+	if len(transport) > 0 {
+		return av1.URN_AVTransport_2
+	}
+	return ""
+}
+
 func AVSetAndPlay(av avsetup) error {
+	urn := detectAVtransport(av.device)
 	var client avtransport
+
 	switch {
-	case strings.HasSuffix(av.device.USN, "AVTransport:1"):
+	case urn == av1.URN_AVTransport_1:
 		clients, err := av1.NewAVTransport1ClientsByURL(av.device.Location)
 		if err != nil {
-			clients, err2 := av1.NewAVTransport2ClientsByURL(av.device.Location)
-			if err2 != nil {
-				return fmt.Errorf("%v | %v", err, err2)
-			}
-			client = avtransport(clients[0])
-		} else {
-			client = avtransport(clients[0])
+			return err
 		}
-	case strings.HasSuffix(av.device.USN, "AVTransport:2"):
+		client = avtransport(clients[0])
+	case urn == av1.URN_AVTransport_2:
 		clients, err := av1.NewAVTransport2ClientsByURL(av.device.Location)
 		if err != nil {
 			return err
@@ -70,6 +79,7 @@ func AVSetAndPlay(av avsetup) error {
 	default:
 		return fmt.Errorf("error: no avtransport found")
 	}
+
 	var err error
 	try := func(metadata string) error {
 		err = client.SetAVTransportURI(0, av.streamURI, metadata)
@@ -83,6 +93,7 @@ func AVSetAndPlay(av avsetup) error {
 		}
 		return nil
 	}
+
 	metadata := fmt.Sprintf(
 		didlTemplate,
 		av.logoURI,
@@ -95,6 +106,7 @@ func AVSetAndPlay(av avsetup) error {
 	)
 	metadata = strings.ReplaceAll(metadata, "\n", " ")
 	metadata = strings.ReplaceAll(metadata, "> <", "><")
+
 	err = try(metadata)
 	if err == nil {
 		return nil
@@ -105,20 +117,17 @@ func AVSetAndPlay(av avsetup) error {
 }
 
 func AVStop(device *goupnp.MaybeRootDevice) {
+	urn := detectAVtransport(device)
 	var client avtransport
+
 	switch {
-	case strings.HasSuffix(device.USN, "AVTransport:1"):
+	case urn == av1.URN_AVTransport_1:
 		clients, err := av1.NewAVTransport1ClientsByURL(device.Location)
 		if err != nil {
-			clients, err := av1.NewAVTransport2ClientsByURL(device.Location)
-			if err != nil {
-				return
-			}
-			client = avtransport(clients[0])
-		} else {
-			client = avtransport(clients[0])
+			return
 		}
-	case strings.HasSuffix(device.USN, "AVTransport:2"):
+		client = avtransport(clients[0])
+	case urn == av1.URN_AVTransport_2:
 		clients, err := av1.NewAVTransport2ClientsByURL(device.Location)
 		if err != nil {
 			return
@@ -127,6 +136,7 @@ func AVStop(device *goupnp.MaybeRootDevice) {
 	default:
 		return
 	}
+
 	client.Stop(0)
 }
 
