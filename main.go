@@ -122,7 +122,7 @@ func main() {
 		fmt.Println()
 		cleanup()
 		if isPlaying && !*dummy {
-			log.Println("stopping av1transport and exiting")
+			log.Println("stopping avtransport and exiting")
 			AVStop(DLNADevice)
 		}
 		fmt.Println("terminated...")
@@ -142,8 +142,14 @@ func main() {
 		switch {
 		case strings.HasSuffix(DLNADevice.USN, "AVTransport:1"):
 			clients, err := av1.NewAVTransport1ClientsByURL(DLNADevice.Location)
-			spew.Fdump(os.Stderr, clients[0], err)
-			location = clients[0].Location
+			if err != nil {
+				clients, err := av1.NewAVTransport2ClientsByURL(DLNADevice.Location)
+				spew.Fdump(os.Stderr, clients[0], err)
+				location = clients[0].Location
+			} else {
+				spew.Fdump(os.Stderr, clients[0], err)
+				location = clients[0].Location
+			}
 		case strings.HasSuffix(DLNADevice.USN, "AVTransport:2"):
 			clients, err := av1.NewAVTransport2ClientsByURL(DLNADevice.Location)
 			spew.Fdump(os.Stderr, clients[0], err)

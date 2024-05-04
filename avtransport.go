@@ -53,9 +53,14 @@ func AVSetAndPlay(av avsetup) error {
 	case strings.HasSuffix(av.device.USN, "AVTransport:1"):
 		clients, err := av1.NewAVTransport1ClientsByURL(av.device.Location)
 		if err != nil {
-			return err
+			clients, err2 := av1.NewAVTransport2ClientsByURL(av.device.Location)
+			if err2 != nil {
+				return fmt.Errorf("%v | %v", err, err2)
+			}
+			client = avtransport(clients[0])
+		} else {
+			client = avtransport(clients[0])
 		}
-		client = avtransport(clients[0])
 	case strings.HasSuffix(av.device.USN, "AVTransport:2"):
 		clients, err := av1.NewAVTransport2ClientsByURL(av.device.Location)
 		if err != nil {
@@ -105,9 +110,14 @@ func AVStop(device *goupnp.MaybeRootDevice) {
 	case strings.HasSuffix(device.USN, "AVTransport:1"):
 		clients, err := av1.NewAVTransport1ClientsByURL(device.Location)
 		if err != nil {
-			return
+			clients, err := av1.NewAVTransport2ClientsByURL(device.Location)
+			if err != nil {
+				return
+			}
+			client = avtransport(clients[0])
+		} else {
+			client = avtransport(clients[0])
 		}
-		client = avtransport(clients[0])
 	case strings.HasSuffix(device.USN, "AVTransport:2"):
 		clients, err := av1.NewAVTransport2ClientsByURL(device.Location)
 		if err != nil {
