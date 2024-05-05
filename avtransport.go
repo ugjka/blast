@@ -77,7 +77,7 @@ func AVSetAndPlay(av avsetup) error {
 		}
 		client = avtransport(clients[0])
 	default:
-		return fmt.Errorf("error: no avtransport found")
+		return fmt.Errorf("no avtransport found")
 	}
 
 	var err error
