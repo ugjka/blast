@@ -64,10 +64,8 @@ func main() {
 	}
 	for _, exe := range exes {
 		if _, err := exec.LookPath(exe); err != nil {
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "dependency:", err)
-				os.Exit(1)
-			}
+			fmt.Fprintln(os.Stderr, "dependency:", err)
+			os.Exit(1)
 		}
 	}
 	device := flag.String("device", "", "dlna device's friendly name")
@@ -123,8 +121,8 @@ func main() {
 		fmt.Println()
 		cleanup()
 		if isPlaying && !*dummy {
-			log.Println("stopping av1transport and exiting")
-			AV1Stop(DLNADevice.Location)
+			log.Println("stopping avtransport and exiting")
+			AVStop(DLNADevice)
 		}
 		fmt.Println("terminated...")
 		os.Exit(0)
@@ -139,21 +137,40 @@ func main() {
 
 	if *debug {
 		spew.Fdump(os.Stderr, DLNADevice)
-		clients, err := av1.NewAVTransport1ClientsByURL(DLNADevice.Location)
-		spew.Fdump(os.Stderr, clients, err)
-		for _, client := range clients {
-			resp, err := http.Get(client.Location.String())
+		var location string
+		urn := detectAVtransport(DLNADevice)
+		switch {
+		case urn == av1.URN_AVTransport_1:
+			clients, err := av1.NewAVTransport1ClientsByURL(DLNADevice.Location)
+			if err == nil {
+				location = clients[0].Location.String()
+			}
+			spew.Fdump(os.Stderr, clients, err)
+
+		case urn == av1.URN_AVTransport_2:
+			clients, err := av1.NewAVTransport2ClientsByURL(DLNADevice.Location)
+			if err == nil {
+				location = clients[0].Location.String()
+			}
+			spew.Fdump(os.Stderr, clients, err)
+		}
+
+		get := func() {
+			if location == "" {
+				return
+			}
+			resp, err := http.Get(location)
 			if err != nil {
-				spew.Fprintln(os.Stderr, err)
-				continue
+				return
 			}
 			data, err := io.ReadAll(resp.Body)
 			if err != nil {
-				spew.Fprintln(os.Stderr, err)
-				continue
+				return
 			}
 			spew.Fprintln(os.Stderr, string(data))
 		}
+		get()
+
 		if !*headers {
 			os.Exit(0)
 		}
@@ -304,15 +321,15 @@ func main() {
 
 	log.Printf("stream URI: %s\n", streamURI)
 
-	log.Println("setting av1transport URI and playing")
+	log.Println("setting avtransport URI and playing")
 	if !*dummy {
-		av := av1setup{
-			location:  DLNADevice.Location,
+		av := avsetup{
+			device:    DLNADevice,
 			stream:    streamHandler,
 			logoURI:   logoURI,
 			streamURI: streamURI,
 		}
-		err = AV1SetAndPlay(av)
+		err = AVSetAndPlay(av)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "transport:", err)
 			cleanup()

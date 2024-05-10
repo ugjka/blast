@@ -27,38 +27,73 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/url"
 	"strings"
 	"time"
 
+	"github.com/huin/goupnp"
 	"github.com/huin/goupnp/dcps/av1"
 )
 
-type av1setup struct {
-	location  *url.URL
+type avsetup struct {
+	device    *goupnp.MaybeRootDevice
 	stream    stream
 	logoURI   string
 	streamURI string
 }
 
-func AV1SetAndPlay(av av1setup) error {
-	client, err := av1.NewAVTransport1ClientsByURL(av.location)
-	if err != nil {
-		return err
+type avtransport interface {
+	SetAVTransportURI(InstanceID uint32, CurrentURI string, CurrentURIMetaData string) (err error)
+	Play(InstanceID uint32, Speed string) (err error)
+	Stop(InstanceID uint32) (err error)
+}
+
+func detectAVtransport(dev *goupnp.MaybeRootDevice) string {
+	transport := dev.Root.Device.FindService(av1.URN_AVTransport_1)
+	if len(transport) > 0 {
+		return av1.URN_AVTransport_1
+	}
+	transport = dev.Root.Device.FindService(av1.URN_AVTransport_2)
+	if len(transport) > 0 {
+		return av1.URN_AVTransport_2
+	}
+	return ""
+}
+
+func AVSetAndPlay(av avsetup) error {
+	urn := detectAVtransport(av.device)
+	var client avtransport
+
+	switch {
+	case urn == av1.URN_AVTransport_1:
+		clients, err := av1.NewAVTransport1ClientsByURL(av.device.Location)
+		if err != nil {
+			return err
+		}
+		client = avtransport(clients[0])
+	case urn == av1.URN_AVTransport_2:
+		clients, err := av1.NewAVTransport2ClientsByURL(av.device.Location)
+		if err != nil {
+			return err
+		}
+		client = avtransport(clients[0])
+	default:
+		return fmt.Errorf("no avtransport found")
 	}
 
+	var err error
 	try := func(metadata string) error {
-		err = client[0].SetAVTransportURI(0, av.streamURI, metadata)
+		err = client.SetAVTransportURI(0, av.streamURI, metadata)
 		if err != nil {
 			return fmt.Errorf("set uri: %v", err)
 		}
 		time.Sleep(time.Second)
-		err = client[0].Play(0, "1")
+		err = client.Play(0, "1")
 		if err != nil {
 			return fmt.Errorf("play: %v", err)
 		}
 		return nil
 	}
+
 	metadata := fmt.Sprintf(
 		didlTemplate,
 		av.logoURI,
@@ -71,6 +106,7 @@ func AV1SetAndPlay(av av1setup) error {
 	)
 	metadata = strings.ReplaceAll(metadata, "\n", " ")
 	metadata = strings.ReplaceAll(metadata, "> <", "><")
+
 	err = try(metadata)
 	if err == nil {
 		return nil
@@ -80,12 +116,28 @@ func AV1SetAndPlay(av av1setup) error {
 	return try("")
 }
 
-func AV1Stop(loc *url.URL) {
-	client, err := av1.NewAVTransport1ClientsByURL(loc)
-	if err != nil {
+func AVStop(device *goupnp.MaybeRootDevice) {
+	urn := detectAVtransport(device)
+	var client avtransport
+
+	switch {
+	case urn == av1.URN_AVTransport_1:
+		clients, err := av1.NewAVTransport1ClientsByURL(device.Location)
+		if err != nil {
+			return
+		}
+		client = avtransport(clients[0])
+	case urn == av1.URN_AVTransport_2:
+		clients, err := av1.NewAVTransport2ClientsByURL(device.Location)
+		if err != nil {
+			return
+		}
+		client = avtransport(clients[0])
+	default:
 		return
 	}
-	client[0].Stop(0)
+
+	client.Stop(0)
 }
 
 const didlTemplate = `<DIDL-Lite
