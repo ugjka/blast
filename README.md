@@ -1,4 +1,7 @@
-# BLAST
+# NOTICE
+blast was renamed to sblast to avoid conflict with [blast+](https://aur.archlinux.org/packages/blast+) namespace. The new [sblast](https://github.com/ugjka/sblast) repository is [here](https://github.com/ugjka/sblast). This repository will be archived
+
+## BLAST
 
 <img src="logo.png" width=256px alt="Blast logo" title="Blast logo">
 
